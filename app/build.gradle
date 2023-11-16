@@ -37,30 +37,72 @@ android {
         compose true
     }
     composeOptions {
-        kotlinCompilerExtensionVersion '1.3.2'
+//        Compose to Kotlin Compatibility Map ( https://developer.android.com/jetpack/androidx/releases/compose-kotlin )
+//        kotlinCompilerExtensionVersion '1.3.2'
+        kotlinCompilerExtensionVersion '1.4.7'
     }
     packagingOptions {
         resources {
             excludes += '/META-INF/{AL2.0,LGPL2.1}'
         }
     }
+    sourceSets {
+        androidTest {
+            java.srcDirs = ['src/androidTest/java']
+            res.srcDirs = ['src/androidTest/res']
+        }
+    }
 }
 
 dependencies {
 
-    implementation 'androidx.core:core-ktx:1.8.0'
-    implementation 'androidx.lifecycle:lifecycle-runtime-ktx:2.3.1'
-    implementation 'androidx.activity:activity-compose:1.5.1'
-    implementation platform('androidx.compose:compose-bom:2022.10.00')
+    // IMPLEMENTATIONS
+//    implementation 'androidx.core:core-ktx:1.8.0'
+    implementation "androidx.core:core-ktx:$androidx_core_ktx"
+//    implementation 'androidx.lifecycle:lifecycle-runtime-ktx:2.3.1'
+    implementation "androidx.lifecycle:lifecycle-runtime-ktx:$androidx_lifecycle_runtime_ktx"
+//    implementation 'androidx.activity:activity-compose:1.5.1'
+    implementation "androidx.activity:activity-compose:$androidx_activity_compose"
+//    implementation platform('androidx.compose:compose-bom:2022.10.00')
+    // See BOM to library version mapping ( https://developer.android.com/jetpack/compose/bom/bom-mapping )
+    implementation platform("androidx.compose:compose-bom:$androidx_compose_bom")
     implementation 'androidx.compose.ui:ui'
     implementation 'androidx.compose.ui:ui-graphics'
     implementation 'androidx.compose.ui:ui-tooling-preview'
-    implementation 'androidx.compose.material3:material3'
-    testImplementation 'junit:junit:4.13.2'
-    androidTestImplementation 'androidx.test.ext:junit:1.1.5'
-    androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.1'
-    androidTestImplementation platform('androidx.compose:compose-bom:2022.10.00')
+//    implementation 'androidx.compose.material3:material3'
+    implementation "androidx.compose.material3:material3:$androidx_compose_material3"
+
+    implementation 'androidx.compose.foundation:foundation'
+    implementation 'androidx.compose.material:material-icons-extended'
+    implementation  "androidx.lifecycle:lifecycle-viewmodel-compose:$androidx_lifecycle_viewmodel_compose"
+
+    // Force upgrade to 1.1.0 because its required by androidTestImplementation,
+    // and without this statement AGP will silently downgrade to tracing:1.0.0
+    // See ( https://github.com/android/android-test/issues/1755#issuecomment-1523810698 )
+    implementation "androidx.tracing:tracing:$androidx_tracing"
+
+
+    // TEST IMPLEMENTATIONS
+    testImplementation "junit:junit:$junit"
+
+
+    // ANDROID IMPLEMENTATIONS
+    androidTestImplementation "androidx.test.ext:junit:$androidx_test_ext_junit"
+    androidTestImplementation "androidx.test.espresso:espresso-core:$androidx_test_espresso_core"
+//    androidTestImplementation platform('androidx.compose:compose-bom:2022.10.00')
+    androidTestImplementation platform("androidx.compose:compose-bom:$androidx_compose_bom")
     androidTestImplementation 'androidx.compose.ui:ui-test-junit4'
+    debugImplementation 'androidx.compose.ui:ui-tooling'
+    debugImplementation 'androidx.compose.ui:ui-test-manifest'
+
+    androidTestImplementation "org.mockito.kotlin:mockito-kotlin:$org_mockito_kotlin"
+    androidTestImplementation "org.mockito:mockito-android:$org_mockito_android"
+
+    androidTestImplementation "com.google.truth:truth:$com_google_truth"
+
+
+    // DEBUG IMPLEMENTATIONS
+    debugImplementation platform("androidx.compose:compose-bom:$androidx_compose_bom")
     debugImplementation 'androidx.compose.ui:ui-tooling'
     debugImplementation 'androidx.compose.ui:ui-test-manifest'
 }
