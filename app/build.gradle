@@ -9,7 +9,7 @@ android {
 
     defaultConfig {
         applicationId "emperorfin.android.currencyconverter"
-        minSdk 21
+        minSdk 26
         targetSdk 33
         versionCode 1
         versionName "1.0"
@@ -74,16 +74,24 @@ dependencies {
 
     implementation 'androidx.compose.foundation:foundation'
     implementation 'androidx.compose.material:material-icons-extended'
-    implementation  "androidx.lifecycle:lifecycle-viewmodel-compose:$androidx_lifecycle_viewmodel_compose"
+    implementation  "androidx.lifecycle:lifecycle-viewmodel-compose:$androidx_lifecycle"
+    implementation  "androidx.lifecycle:lifecycle-runtime-compose:$androidx_lifecycle"
+    implementation  "androidx.lifecycle:lifecycle-livedata-ktx:$androidx_lifecycle"
 
     // Force upgrade to 1.1.0 because its required by androidTestImplementation,
     // and without this statement AGP will silently downgrade to tracing:1.0.0
     // See ( https://github.com/android/android-test/issues/1755#issuecomment-1523810698 )
     implementation "androidx.tracing:tracing:$androidx_tracing"
+    implementation "androidx.navigation:navigation-compose:$androidx_navigation"
+//    implementation "androidx.hilt:hilt-navigation-compose:$androidx_hilt_navigation_compose"
+//    implementation "me.omico.compose:compose-material3-pullrefresh"
+    implementation "com.google.code.gson:gson:$com_google_gson"
+    implementation "com.github.madrapps:plot:$madrapps_plot"
 
 
     // TEST IMPLEMENTATIONS
     testImplementation "junit:junit:$junit"
+    testImplementation "androidx.navigation:navigation-testing:$androidx_navigation"
 
 
     // ANDROID IMPLEMENTATIONS
