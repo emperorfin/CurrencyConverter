@@ -13,5 +13,5 @@ data class CurrencyConversionUiState(
     val items: List<CurrencyRate> = emptyList(),
     val mapOfCurrencySymbolsToFlag: Map<String, String> = emptyMap(),
     val isLoading: Boolean = false,
-    val message: Int? = null
+    val errorMessage: Int? = null
 )

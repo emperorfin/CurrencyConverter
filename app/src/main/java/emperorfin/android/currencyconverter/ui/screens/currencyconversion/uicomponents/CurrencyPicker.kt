@@ -86,7 +86,7 @@ fun CurrencyPicker(
             textStyle = LocalTextStyle.current.copy(fontWeight = FontWeight.SemiBold),
             singleLine = true,
             onValueChange = { newInput ->
-                selectedSymbol = newInput
+                selectedSymbol = newInput.uppercase()
                 onSymbolSelected(newInput)
             },
             trailingIcon = {

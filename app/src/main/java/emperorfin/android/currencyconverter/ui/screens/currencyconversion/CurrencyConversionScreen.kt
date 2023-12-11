@@ -52,6 +52,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.text.toUpperCase
+import androidx.core.text.isDigitsOnly
 import androidx.lifecycle.viewmodel.compose.viewModel
 //import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import emperorfin.android.currencyconverter.R
@@ -60,6 +62,7 @@ import emperorfin.android.currencyconverter.ui.screens.currencyconversion.stateh
 import emperorfin.android.currencyconverter.ui.screens.currencyconversion.stateholders.CurrencyConversionViewModelFactory
 import emperorfin.android.currencyconverter.ui.screens.currencyconversion.uicomponents.AppName
 import emperorfin.android.currencyconverter.ui.screens.currencyconversion.uicomponents.CurrencyPicker
+import emperorfin.android.currencyconverter.ui.screens.currencyconversion.uicomponents.LoadingIndicator
 import emperorfin.android.currencyconverter.ui.screens.currencyconversion.uicomponents.RateTextField
 import emperorfin.android.currencyconverter.ui.theme.CurrencyConverterTheme
 import emperorfin.android.currencyconverter.ui.utils.CurrencyConversionTopAppBar
@@ -113,7 +116,8 @@ fun CurrencyConversionScreen(
             context = context,
             loading = uiState.isLoading,
             currencyRates = uiState.items,
-            noCurrenciesLabel = R.string.app_name,
+//            noCurrenciesLabel = R.string.app_name,
+            noCurrenciesLabel = uiState.errorMessage ?: R.string.no_currencies,
             noCurrenciesIconRes = R.drawable.icon_refresh_3104,
             onRefresh = {
                 viewModel.convert(
@@ -177,6 +181,7 @@ private fun Content(
             loading = loading,
             empty = currencyRates.isEmpty() && !loading,
             emptyContent = { EmptyContent(noCurrenciesLabel, noCurrenciesIconRes, modifier, onRefresh) },
+            loadingIndicator = { LoadingIndicator(modifier = modifier) },
             onRefresh = onRefresh
         ) {
 
@@ -192,7 +197,7 @@ private fun Content(
                         modifier,
                         defaultSymbol = "USD",
                         mapOfCurrencySymbolsToFlag = mapOfCurrencySymbolsToFlag,
-                        onSymbolSelected = { newText -> baseCurrencySymbol = newText }
+                        onSymbolSelected = { newText -> baseCurrencySymbol = newText.uppercase() }
                     )
 
                     Spacer(modifier = Modifier.width(5.dp))
@@ -230,11 +235,17 @@ private fun Content(
 //                            ).show()
 //                        }
 
-                        if (!mapOfCurrencySymbolsToFlag.containsKey(baseCurrencySymbol)) {
-                            Toast.makeText(context, "Please select a valid currency symbol.", Toast.LENGTH_SHORT).show()
+                            if (!baseAmount.isDigitsOnly()) {
+                                Toast.makeText(context, "Input must be digits only.", Toast.LENGTH_SHORT).show()
 
-                            return@Button
-                        }
+                                return@Button
+                            }
+
+                            if (!mapOfCurrencySymbolsToFlag.containsKey(baseCurrencySymbol)) {
+                                Toast.makeText(context, "Please select a valid currency symbol.", Toast.LENGTH_SHORT).show()
+
+                                return@Button
+                            }
 
                             onConvert(baseAmount.toInt(), baseCurrencySymbol)
 

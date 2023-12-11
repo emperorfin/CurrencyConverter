@@ -5,16 +5,23 @@ import android.content.res.AssetManager
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import emperorfin.android.currencyconverter.R
+import emperorfin.android.currencyconverter.data.datasources.local.frameworks.room.AppRoomDatabase
+import emperorfin.android.currencyconverter.domain.models.currencyconverter.CurrencyConverterModelMapper
 import emperorfin.android.currencyconverter.ui.models.CurrencyRate
+import emperorfin.android.currencyconverter.ui.models.currencyconverter.CurrencyConverterUiModel
+import emperorfin.android.currencyconverter.ui.models.currencyconverter.CurrencyConverterUiModelMapper
 import emperorfin.android.currencyconverter.ui.utils.Async
+import emperorfin.android.currencyconverter.ui.utils.CurrencyConverterSampleDataGeneratorUtil
 import emperorfin.android.currencyconverter.ui.utils.Helpers
 import emperorfin.android.currencyconverter.ui.utils.WhileUiSubscribed
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
 
 
@@ -26,9 +33,15 @@ import kotlin.math.roundToInt
 
 class CurrencyConversionViewModel(application: Application) : AndroidViewModel(application) {
 
+    private companion object {
+
+        const val DELAY_TIME_MILLIS_3000: Long = 3000
+
+    }
+
     private val applicationContext = getApplication<Application>()
 
-    private val currenciesTemp: Map<String, Number> = mapOf(
+    private val currencyRatesInMemory: Map<String, Number> = mapOf(
         "AED" to 3.6721,
         "AFN" to 69.845466,
         "ALL" to 92.941497,
@@ -201,21 +214,41 @@ class CurrencyConversionViewModel(application: Application) : AndroidViewModel(a
     )
 
     private val _isLoading = MutableStateFlow(false)
-    private val _message: MutableStateFlow<Int?> = MutableStateFlow(null)
-    private val _currencyRates: MutableStateFlow<List<CurrencyRate>> = MutableStateFlow(emptyList())
-    private val currencyRates: MutableStateFlow<List<CurrencyRate>> = _currencyRates
-    private val _currencies: MutableStateFlow<Map<String, Number>> = MutableStateFlow(emptyMap())
-    private val currencies: MutableStateFlow<Map<String, Number>> = _currencies
+    private val _errorMessage: MutableStateFlow<Int?> = MutableStateFlow(null)
+    private val _currencyRatesWithFlags: MutableStateFlow<List<CurrencyRate>> = MutableStateFlow(emptyList())
+    private val currencyRatesWithFlags: MutableStateFlow<List<CurrencyRate>> = _currencyRatesWithFlags
+    private val _currencyRates: MutableStateFlow<Map<String, Number>?> = MutableStateFlow(emptyMap())
+    private val currencyRates: MutableStateFlow<Map<String, Number>?> = _currencyRates
 
     init {
-        _currencies.value = currenciesTemp
+        // Option 1 (error)
+//        simulateLoadingCurrencyRatesErrorOnAppStartup()
+        // Option 2 (no data)
+//        simulateNoCurrencyRatesOnAppStartup()
+        // Option 3 (sample data)
+        getInMemoryCurrencyRates()
+        // Option 4 (incomplete sample data)
+//        generateCurrencyRatesSampleData()
+        // Option 5 (db sample data)
+//        getDatabaseCurrencyRatesSampleDataWithoutLocalDataSource()
+
     }
 
     fun convert(assets: AssetManager = applicationContext.assets, baseAmount: Int, baseCurrencySymbol: String) {
 
         val mapOfCurrencySymbolsToFlag = Helpers.loadMapOfCurrencySymbolToFlag(assets)
 
-        val currencies: Map<String, Number> = currencies.value
+        val currencies: Map<String, Number>? = currencyRates.value
+
+        if (currencies?.isEmpty() == true) {
+            _errorMessage.value = null
+
+            return
+        } else if (currencies == null) {
+            _errorMessage.value = R.string.error_loading_currency_rates
+
+            return
+        }
 
         val currencyRates = mutableListOf<CurrencyRate>()
 
@@ -303,32 +336,28 @@ class CurrencyConversionViewModel(application: Application) : AndroidViewModel(a
             //}
         }
 
-        _currencyRates.value = currencyRates
+        _currencyRatesWithFlags.value = currencyRates
     }
 
-    private fun roundToThreeDecimalPlaces(rateValue: Double): Double {
-        return (rateValue * 1000.0).roundToInt() / 1000.0
-    }
-
-    private val _currencyRatesAsync = combine(currencyRates) { currencyRates ->
+    private val _currencyRatesWithFlagsAsync = combine(currencyRatesWithFlags) { currencyRates ->
             currencyRates
         }
             .map { Async.Success(it[0]) }
             .catch<Async<List<CurrencyRate>>> { emit(Async.Error(R.string.error_loading_currency_rates)) }
 
     val uiState: StateFlow<CurrencyConversionUiState> = combine(
-        _isLoading, _message, _currencyRatesAsync
-    ) { isLoading, message, currencyRatesAsync ->
-        when (currencyRatesAsync) {
+        _isLoading, _errorMessage, _currencyRatesWithFlagsAsync
+    ) { isLoading, errorMessage, currencyRatesWithFlagsAsync ->
+        when (currencyRatesWithFlagsAsync) {
             Async.Loading -> {
                 CurrencyConversionUiState(isLoading = true)
             }
             is Async.Error -> {
-                CurrencyConversionUiState(message = currencyRatesAsync.errorMessage)
+                CurrencyConversionUiState(errorMessage = currencyRatesWithFlagsAsync.errorMessage)
             }
             is Async.Success<List<CurrencyRate>> -> {
 
-                val currencyRateItems: List<CurrencyRate> = currencyRatesAsync.data
+                val currencyRateItems: List<CurrencyRate> = currencyRatesWithFlagsAsync.data
                 val currencyRateItemsNew: MutableList<CurrencyRate> = mutableListOf()
 
                 val mapOfCurrencySymbolsToFlag = mutableMapOf<String, String>()
@@ -352,7 +381,7 @@ class CurrencyConversionViewModel(application: Application) : AndroidViewModel(a
                     items = currencyRateItemsNew,
                     mapOfCurrencySymbolsToFlag = mapOfCurrencySymbolsToFlag,
                     isLoading = isLoading,
-                    message = message
+                    errorMessage = errorMessage
                 )
             }
         }
@@ -362,4 +391,104 @@ class CurrencyConversionViewModel(application: Application) : AndroidViewModel(a
             started = WhileUiSubscribed,
             initialValue = CurrencyConversionUiState(isLoading = true)
         )
+
+    private fun roundToThreeDecimalPlaces(rateValue: Double): Double {
+        return (rateValue * 1000.0).roundToInt() / 1000.0
+    }
+
+    private fun simulateLoadingCurrencyRatesErrorOnAppStartup() = viewModelScope.launch {
+        _isLoading.value = true
+
+        delay(DELAY_TIME_MILLIS_3000)
+
+        _currencyRates.value = null
+
+        convert(baseAmount = 1, baseCurrencySymbol = "USD")
+
+        _currencyRates.value = currencyRatesInMemory
+
+        _isLoading.value = false
+    }
+    private fun simulateNoCurrencyRatesOnAppStartup() = viewModelScope.launch {
+        _isLoading.value = true
+
+        delay(DELAY_TIME_MILLIS_3000)
+
+        _currencyRates.value = currencyRatesInMemory
+
+        _isLoading.value = false
+    }
+
+    private fun getInMemoryCurrencyRates() {
+        _isLoading.value = true
+
+        _currencyRates.value = currencyRatesInMemory
+
+        convert(baseAmount = 1, baseCurrencySymbol = "USD")
+
+        _isLoading.value = false
+    }
+
+    private fun generateCurrencyRatesSampleData() = viewModelScope.launch {
+
+        _isLoading.value = true
+
+        delay(DELAY_TIME_MILLIS_3000)
+
+        val currencyRates = mutableMapOf<String, Number>()
+
+        val currencyConverterList: List<CurrencyConverterUiModel> =
+            CurrencyConverterSampleDataGeneratorUtil.getTransformedCurrencyConverterEntityList()
+
+        currencyConverterList.forEach {
+            currencyRates[it.currencySymbolOther] = it.rate
+        }
+
+        val baseCurrencySymbolUsd: String = currencyConverterList[0].currencySymbolBase
+
+        currencyRates[baseCurrencySymbolUsd] = currencyConverterList[0].rate
+
+        _currencyRates.value = currencyRates
+//        _currencyRates.value = emptyMap()
+
+        convert(baseAmount = 1, baseCurrencySymbol = baseCurrencySymbolUsd)
+
+        _isLoading.value = false
+    }
+
+    private fun getDatabaseCurrencyRatesSampleDataWithoutLocalDataSource() = viewModelScope.launch{
+
+        _isLoading.value = true
+
+        val entityCurrencyRates = AppRoomDatabase
+            .getInstance(applicationContext)
+            .mCurrencyRateDao
+            .getCurrencyRates(currencySymbolBase = "USD")
+
+        val currencyConverterModelMapper = CurrencyConverterModelMapper()
+        val currencyConverterUiModelMapper = CurrencyConverterUiModelMapper()
+
+        val currencyRates = mutableMapOf<String, Number>()
+
+        val currencyConverterList: List<CurrencyConverterUiModel> = entityCurrencyRates.map {
+            currencyConverterModelMapper.transform(it)
+        }.map {
+            currencyConverterUiModelMapper.transform(it)
+        }
+
+        currencyConverterList.forEach {
+            currencyRates[it.currencySymbolOther] = it.rate
+        }
+
+        val baseCurrencySymbol: String = currencyConverterList[0].currencySymbolBase
+
+        currencyRates[baseCurrencySymbol] = currencyConverterList[0].rate
+
+        _currencyRates.value = currencyRates
+
+        convert(baseAmount = 1, baseCurrencySymbol = baseCurrencySymbol)
+
+        _isLoading.value = false
+    }
+
 }
