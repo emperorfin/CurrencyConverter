@@ -8,7 +8,6 @@ package emperorfin.android.currencyconverter.domain.uilayer.events.inputs.curren
 
 
 interface CurrencyConverterDataTransferObjectParams : Params {
-    val id: String?
     val currencySymbolBase: String?
     val currencySymbolOther: String?
     val rate: Double?

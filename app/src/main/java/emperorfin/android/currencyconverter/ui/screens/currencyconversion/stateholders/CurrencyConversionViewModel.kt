@@ -1,27 +1,28 @@
 package emperorfin.android.currencyconverter.ui.screens.currencyconversion.stateholders
 
 import android.app.Application
+import android.content.Context
 import android.content.res.AssetManager
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import emperorfin.android.currencyconverter.R
 import emperorfin.android.currencyconverter.data.datasources.local.frameworks.room.AppRoomDatabase
+import emperorfin.android.currencyconverter.domain.exceptions.CurrencyConverterFailure
 import emperorfin.android.currencyconverter.domain.models.currencyconverter.CurrencyConverterModelMapper
-import emperorfin.android.currencyconverter.ui.models.CurrencyRate
 import emperorfin.android.currencyconverter.ui.models.currencyconverter.CurrencyConverterUiModel
 import emperorfin.android.currencyconverter.ui.models.currencyconverter.CurrencyConverterUiModelMapper
-import emperorfin.android.currencyconverter.ui.utils.Async
+import emperorfin.android.currencyconverter.domain.uilayer.events.outputs.ResultData
 import emperorfin.android.currencyconverter.ui.utils.CurrencyConverterSampleDataGeneratorUtil
 import emperorfin.android.currencyconverter.ui.utils.Helpers
 import emperorfin.android.currencyconverter.ui.utils.WhileUiSubscribed
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.catch
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlin.coroutines.CoroutineContext
 import kotlin.math.roundToInt
 
 
@@ -37,9 +38,16 @@ class CurrencyConversionViewModel(application: Application) : AndroidViewModel(a
 
         const val DELAY_TIME_MILLIS_3000: Long = 3000
 
+        const val CURRENCY_SYMBOL_USD: String = "USD"
+
     }
 
+    private val coroutineDispatcherDefault = Dispatchers.Default
+    private val coroutineDispatcherIo = Dispatchers.IO
+
     private val applicationContext = getApplication<Application>()
+
+    private var initCurrencyRates = true
 
     private val currencyRatesInMemory: Map<String, Number> = mapOf(
         "AED" to 3.6721,
@@ -214,172 +222,131 @@ class CurrencyConversionViewModel(application: Application) : AndroidViewModel(a
     )
 
     private val _isLoading = MutableStateFlow(false)
+
     private val _errorMessage: MutableStateFlow<Int?> = MutableStateFlow(null)
-    private val _currencyRatesWithFlags: MutableStateFlow<List<CurrencyRate>> = MutableStateFlow(emptyList())
-    private val currencyRatesWithFlags: MutableStateFlow<List<CurrencyRate>> = _currencyRatesWithFlags
-    private val _currencyRates: MutableStateFlow<Map<String, Number>?> = MutableStateFlow(emptyMap())
-    private val currencyRates: MutableStateFlow<Map<String, Number>?> = _currencyRates
+
+    private val _currencyRatesWithFlags: MutableStateFlow<ResultData<List<CurrencyConverterUiModel>>> =  MutableStateFlow(ResultData.Loading)
+    private val currencyRatesWithFlags: StateFlow<ResultData<List<CurrencyConverterUiModel>>> = _currencyRatesWithFlags
 
     init {
-        // Option 1 (error)
+
+        // Option 1
 //        simulateLoadingCurrencyRatesErrorOnAppStartup()
-        // Option 2 (no data)
-//        simulateNoCurrencyRatesOnAppStartup()
-        // Option 3 (sample data)
-        getInMemoryCurrencyRates()
-        // Option 4 (incomplete sample data)
-//        generateCurrencyRatesSampleData()
-        // Option 5 (db sample data)
-//        getDatabaseCurrencyRatesSampleDataWithoutLocalDataSource()
+        // Option 2
+        simulateNoCurrencyRatesOnAppStartup()
+        // Option 3
+//        initCurrencyRates()
 
     }
 
     fun convert(assets: AssetManager = applicationContext.assets, baseAmount: Int, baseCurrencySymbol: String) {
 
-        val mapOfCurrencySymbolsToFlag = Helpers.loadMapOfCurrencySymbolToFlag(assets)
+        val currencyRatesWithFlags: ResultData<List<CurrencyConverterUiModel>> = _currencyRatesWithFlags.value
 
-        val currencies: Map<String, Number>? = currencyRates.value
-
-        if (currencies?.isEmpty() == true) {
-            _errorMessage.value = null
-
-            return
-        } else if (currencies == null) {
-            _errorMessage.value = R.string.error_loading_currency_rates
+        if (currencyRatesWithFlags is ResultData.Error) {
+            _currencyRatesWithFlags.value = currencyRatesWithFlags
 
             return
         }
 
-        val currencyRates = mutableListOf<CurrencyRate>()
+        val currencyRatesWithFlagsOld: List<CurrencyConverterUiModel> = (currencyRatesWithFlags as ResultData.Success).data
 
-        currencies.forEach {
+        _currencyRatesWithFlags.value = ResultData.Loading
 
-            val baseCurrencySymbolValue: Double = currencies[baseCurrencySymbol]?.toDouble()!!
+        val currencyRatesWithFlags2 = mutableListOf<CurrencyConverterUiModel>()
 
-            //if (baseCurrencySymbol != it.key) {
-                if (baseCurrencySymbol == "USD") {
-                    if(mapOfCurrencySymbolsToFlag.containsKey(it.key)) {
+        currencyRatesWithFlagsOld.forEach {
 
-                        val currencyFlag = mapOfCurrencySymbolsToFlag[it.key]
+            val currencyRateWithFlag: CurrencyConverterUiModel = currencyRatesWithFlagsOld.single { currencyRateWithFlag ->
+                currencyRateWithFlag.currencySymbolOther == baseCurrencySymbol
+            }
 
-                        val rateValue = it.value
+            val baseCurrencySymbolValue: Double = currencyRateWithFlag.rate
 
-                        var rateString = ""
+            val currencyRateValue: Double = it.rate
 
-                        if (rateValue is Double) {
-                            val newRate = rateValue * baseAmount
-                            val rateToOneDecimalPlace = roundToThreeDecimalPlaces(newRate)
+            if (baseCurrencySymbol == CURRENCY_SYMBOL_USD) {
+                val newRate = currencyRateValue * baseAmount
+                val rateToThreeDecimalPlace = roundToThreeDecimalPlaces(newRate)
 
-                            rateString = rateToOneDecimalPlace.toString()
-                        } else if (rateValue is Float) {
-                            val newRate = rateValue * baseAmount
-                            val rateToOneDecimalPlace = roundToThreeDecimalPlaces(newRate as Double)
+                val currencyRateWithFlagNew = CurrencyConverterUiModel(
+                    currencySymbolBase = baseCurrencySymbol,
+                    currencySymbolOther = it.currencySymbolOther,
+                    rate = rateToThreeDecimalPlace,
+                    currencySymbolOtherFlag = it.currencySymbolOtherFlag
+                )
 
-                            rateString = rateToOneDecimalPlace.toString()
-                        } else if (rateValue is Int) {
-                            val newRate = rateValue * baseAmount
-                            rateString = newRate.toString()
-                        } else if (rateValue is Long) {
-                            val newRate = rateValue * baseAmount
-                            rateString = newRate.toString()
-                        }
+                currencyRatesWithFlags2.add(currencyRateWithFlagNew)
+            } else {
 
-                        val currencySymbolNew: String = if (baseCurrencySymbol == it.key) "_${it.key}" else it.key
+                val newRate = (currencyRateValue / baseCurrencySymbolValue) * baseAmount
+                val rateToThreeDecimalPlace = roundToThreeDecimalPlaces(newRate)
 
-                        val currencyRate = CurrencyRate(
-                            currencyCode = currencySymbolNew,
-                            currencyFlag = currencyFlag!!,
-                            rate = rateString
-                        )
+                val currencyRateWithFlagNew = CurrencyConverterUiModel(
+                    currencySymbolBase = baseCurrencySymbol,
+                    currencySymbolOther = it.currencySymbolOther,
+                    rate = rateToThreeDecimalPlace,
+                    currencySymbolOtherFlag = it.currencySymbolOtherFlag
+                )
 
-                        currencyRates.add(currencyRate)
-                    }
-                } else {
-
-                    if(mapOfCurrencySymbolsToFlag.containsKey(it.key)) {
-
-                        val currencyFlag = mapOfCurrencySymbolsToFlag[it.key]
-
-                        val rateValue = it.value
-
-                        var rateString = ""
-
-                        if (rateValue is Double) {
-                            val newRate = (rateValue / baseCurrencySymbolValue) * baseAmount
-                            val rateToOneDecimalPlace = roundToThreeDecimalPlaces(newRate)
-
-                            rateString = rateToOneDecimalPlace.toString()
-                        } else if (rateValue is Float) {
-                            val newRate = (rateValue / baseCurrencySymbolValue) * baseAmount
-                            val rateToOneDecimalPlace = roundToThreeDecimalPlaces(newRate as Double)
-
-                            rateString = rateToOneDecimalPlace.toString()
-                        } else if (rateValue is Int) {
-                            val newRate = (rateValue / baseCurrencySymbolValue) * baseAmount
-                            rateString = newRate.toString()
-                        } else if (rateValue is Long) {
-                            val newRate = (rateValue / baseCurrencySymbolValue) * baseAmount
-                            rateString = newRate.toString()
-                        }
-
-                        val currencySymbolNew: String = if (baseCurrencySymbol == it.key) "_${it.key}" else it.key
-
-                        val currencyRate = CurrencyRate(
-                            currencyCode = currencySymbolNew,
-                            currencyFlag = currencyFlag!!,
-                            rate = rateString
-                        )
-
-                        currencyRates.add(currencyRate)
-                    }
-                }
-            //}
+                currencyRatesWithFlags2.add(currencyRateWithFlagNew)
+            }
         }
 
-        _currencyRatesWithFlags.value = currencyRates
+        initCurrencyRates = false
+
+        _currencyRatesWithFlags.value = ResultData.Success(data = currencyRatesWithFlags2)
     }
 
-    private val _currencyRatesWithFlagsAsync = combine(currencyRatesWithFlags) { currencyRates ->
-            currencyRates
-        }
-            .map { Async.Success(it[0]) }
-            .catch<Async<List<CurrencyRate>>> { emit(Async.Error(R.string.error_loading_currency_rates)) }
+    fun initCurrencyRates(context: Context = applicationContext) {
+
+        // Option 1
+        getInMemoryCurrencyRates(context = context)
+        // Option 2
+//        generateCurrencyRatesSampleData()
+        // Option 3
+//        getDatabaseCurrencyRatesSampleDataWithoutLocalDataSource()
+
+    }
 
     val uiState: StateFlow<CurrencyConversionUiState> = combine(
-        _isLoading, _errorMessage, _currencyRatesWithFlagsAsync
-    ) { isLoading, errorMessage, currencyRatesWithFlagsAsync ->
-        when (currencyRatesWithFlagsAsync) {
-            Async.Loading -> {
+        _isLoading, _errorMessage, currencyRatesWithFlags
+    ) { isLoading, errorMessage, currencyRatesWithFlags ->
+        when (currencyRatesWithFlags) {
+            ResultData.Loading -> {
                 CurrencyConversionUiState(isLoading = true)
             }
-            is Async.Error -> {
-                CurrencyConversionUiState(errorMessage = currencyRatesWithFlagsAsync.errorMessage)
+            is ResultData.Error -> {
+                CurrencyConversionUiState(
+                    errorMessage = (currencyRatesWithFlags.failure as CurrencyConverterFailure).message,
+                    initRates = initCurrencyRates
+                )
             }
-            is Async.Success<List<CurrencyRate>> -> {
+            is ResultData.Success<List<CurrencyConverterUiModel>> -> {
 
-                val currencyRateItems: List<CurrencyRate> = currencyRatesWithFlagsAsync.data
-                val currencyRateItemsNew: MutableList<CurrencyRate> = mutableListOf()
+                val currencyRatesWithFlagsOld: List<CurrencyConverterUiModel> = currencyRatesWithFlags.data
+                val currencyRatesWithFlagsNew: MutableList<CurrencyConverterUiModel> = mutableListOf()
 
-                val mapOfCurrencySymbolsToFlag = mutableMapOf<String, String>()
+                val mapOfCurrencySymbolsToFlag = mutableMapOf<String, String?>()
 
-                currencyRateItems.forEach {
+                currencyRatesWithFlagsOld.forEach {
 
-                    val currencyCode: String = it.currencyCode
-
-                    val currencyCodeNew: String = if (currencyCode.contains("_")) {
-                        currencyCode.substring(1)
-                    } else {
-                        currencyRateItemsNew.add(it)
-
-                        currencyCode
+                    if (it.currencySymbolBase != it.currencySymbolOther) {
+                        currencyRatesWithFlagsNew.add(it)
                     }
 
-                    mapOfCurrencySymbolsToFlag[currencyCodeNew] = it.currencyFlag
+                    mapOfCurrencySymbolsToFlag[it.currencySymbolOther] = it.currencySymbolOtherFlag
                 }
 
+                val currencyRatesWithFlagsSorted = currencyRatesWithFlagsNew.sortedBy {
+                    it.currencySymbolOther
+                }
+
+                val mapOfCurrencySymbolsToFlagSorted = mapOfCurrencySymbolsToFlag.toSortedMap()
+
                 CurrencyConversionUiState(
-                    items = currencyRateItemsNew,
-                    mapOfCurrencySymbolsToFlag = mapOfCurrencySymbolsToFlag,
+                    items = currencyRatesWithFlagsSorted,
+                    mapOfCurrencySymbolsToFlag = mapOfCurrencySymbolsToFlagSorted,
                     isLoading = isLoading,
                     errorMessage = errorMessage
                 )
@@ -396,99 +363,91 @@ class CurrencyConversionViewModel(application: Application) : AndroidViewModel(a
         return (rateValue * 1000.0).roundToInt() / 1000.0
     }
 
-    private fun simulateLoadingCurrencyRatesErrorOnAppStartup() = viewModelScope.launch {
-        _isLoading.value = true
+    private fun simulateLoadingCurrencyRatesErrorOnAppStartup() = viewModelScope.launch(context = coroutineDispatcherDefault) {
+        _currencyRatesWithFlags.value = ResultData.Loading
 
         delay(DELAY_TIME_MILLIS_3000)
 
-        _currencyRates.value = null
-
-        convert(baseAmount = 1, baseCurrencySymbol = "USD")
-
-        _currencyRates.value = currencyRatesInMemory
-
-        _isLoading.value = false
+        _currencyRatesWithFlags.value = ResultData.Error(
+            failure = CurrencyConverterFailure.CurrencyRateLocalError()
+        )
     }
-    private fun simulateNoCurrencyRatesOnAppStartup() = viewModelScope.launch {
-        _isLoading.value = true
+
+    private fun simulateNoCurrencyRatesOnAppStartup() = viewModelScope.launch(context = coroutineDispatcherDefault) {
+        _currencyRatesWithFlags.value = ResultData.Loading
 
         delay(DELAY_TIME_MILLIS_3000)
 
-        _currencyRates.value = currencyRatesInMemory
-
-        _isLoading.value = false
+        _currencyRatesWithFlags.value = ResultData.Error(
+            failure = CurrencyConverterFailure.CurrencyRateListNotAvailableLocalError()
+        )
     }
 
-    private fun getInMemoryCurrencyRates() {
-        _isLoading.value = true
+    private fun getInMemoryCurrencyRates(context: Context) = viewModelScope.launch(context = coroutineDispatcherDefault) {
+        _currencyRatesWithFlags.value = ResultData.Loading
 
-        _currencyRates.value = currencyRatesInMemory
+        val currencyRates = mutableListOf<CurrencyConverterUiModel>()
 
-        convert(baseAmount = 1, baseCurrencySymbol = "USD")
+        currencyRatesInMemory.forEach {
 
-        _isLoading.value = false
-    }
+            val mapOfCurrencySymbolsToFlag = Helpers.loadMapOfCurrencySymbolToFlag(context.assets)
 
-    private fun generateCurrencyRatesSampleData() = viewModelScope.launch {
+            val currencySymbolOther: String = it.key
+            val currencySymbolOtherFlag: String? = mapOfCurrencySymbolsToFlag[currencySymbolOther]
 
-        _isLoading.value = true
+            val currencyRate = CurrencyConverterUiModel(
+                currencySymbolBase = CURRENCY_SYMBOL_USD,
+                currencySymbolOther = currencySymbolOther,
+                rate = it.value.toDouble(),
+                currencySymbolOtherFlag = currencySymbolOtherFlag
 
-        delay(DELAY_TIME_MILLIS_3000)
+            )
 
-        val currencyRates = mutableMapOf<String, Number>()
-
-        val currencyConverterList: List<CurrencyConverterUiModel> =
-            CurrencyConverterSampleDataGeneratorUtil.getTransformedCurrencyConverterEntityList()
-
-        currencyConverterList.forEach {
-            currencyRates[it.currencySymbolOther] = it.rate
+            currencyRates.add(currencyRate)
         }
 
-        val baseCurrencySymbolUsd: String = currencyConverterList[0].currencySymbolBase
+        initCurrencyRates = false
 
-        currencyRates[baseCurrencySymbolUsd] = currencyConverterList[0].rate
+        _currencyRatesWithFlags.value = ResultData.Success(data = currencyRates)
 
-        _currencyRates.value = currencyRates
-//        _currencyRates.value = emptyMap()
-
-        convert(baseAmount = 1, baseCurrencySymbol = baseCurrencySymbolUsd)
-
-        _isLoading.value = false
     }
 
-    private fun getDatabaseCurrencyRatesSampleDataWithoutLocalDataSource() = viewModelScope.launch{
+    private fun generateCurrencyRatesSampleData() = viewModelScope.launch(context = coroutineDispatcherDefault) {
 
-        _isLoading.value = true
+        _currencyRatesWithFlags.value = ResultData.Loading
 
-        val entityCurrencyRates = AppRoomDatabase
+        delay(DELAY_TIME_MILLIS_3000)
+
+        val currencyConverterList: List<CurrencyConverterUiModel> =
+            CurrencyConverterSampleDataGeneratorUtil
+                .getTransformedCurrencyConverterEntityList(context = applicationContext)
+
+        initCurrencyRates = false
+
+        _currencyRatesWithFlags.value = ResultData.Success(data = currencyConverterList)
+    }
+
+    private fun getDatabaseCurrencyRatesSampleDataWithoutLocalDataSource() = viewModelScope.launch(context = coroutineDispatcherIo) {
+
+        _currencyRatesWithFlags.value = ResultData.Loading
+
+        val currencyRatesEntity = AppRoomDatabase
             .getInstance(applicationContext)
             .mCurrencyRateDao
-            .getCurrencyRates(currencySymbolBase = "USD")
+            .getCurrencyRates(currencySymbolBase = CURRENCY_SYMBOL_USD)
 
         val currencyConverterModelMapper = CurrencyConverterModelMapper()
-        val currencyConverterUiModelMapper = CurrencyConverterUiModelMapper()
+        val currencyConverterUiModelMapper = CurrencyConverterUiModelMapper(context = applicationContext)
 
-        val currencyRates = mutableMapOf<String, Number>()
-
-        val currencyConverterList: List<CurrencyConverterUiModel> = entityCurrencyRates.map {
+        val currencyRatesUiModel: List<CurrencyConverterUiModel> = currencyRatesEntity.map {
             currencyConverterModelMapper.transform(it)
         }.map {
             currencyConverterUiModelMapper.transform(it)
         }
 
-        currencyConverterList.forEach {
-            currencyRates[it.currencySymbolOther] = it.rate
-        }
+        initCurrencyRates = false
 
-        val baseCurrencySymbol: String = currencyConverterList[0].currencySymbolBase
-
-        currencyRates[baseCurrencySymbol] = currencyConverterList[0].rate
-
-        _currencyRates.value = currencyRates
-
-        convert(baseAmount = 1, baseCurrencySymbol = baseCurrencySymbol)
-
-        _isLoading.value = false
+        _currencyRatesWithFlags.value = ResultData.Success(data = currencyRatesUiModel)
     }
 
 }

@@ -7,4 +7,6 @@ package emperorfin.android.currencyconverter.domain.uilayer.events.inputs.curren
  */
 
 
-interface CurrencyConverterUiModelParams : CurrencyConverterModelParams
+interface CurrencyConverterUiModelParams : CurrencyConverterModelParams {
+    val currencySymbolOtherFlag: String?
+}

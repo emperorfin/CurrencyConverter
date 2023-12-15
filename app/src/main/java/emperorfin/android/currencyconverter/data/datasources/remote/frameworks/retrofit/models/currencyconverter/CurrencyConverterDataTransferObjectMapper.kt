@@ -13,7 +13,6 @@ class CurrencyConverterDataTransferObjectMapper {
 
     fun transform(currencyConverterModel: CurrencyConverterModel): CurrencyConverterDataTransferObject {
 
-        val id: String = currencyConverterModel.id
         val currencySymbolBase: String = currencyConverterModel.currencySymbolBase
         val currencySymbolOther: String = currencyConverterModel.currencySymbolOther
         val rate: Double = currencyConverterModel.rate
@@ -21,8 +20,7 @@ class CurrencyConverterDataTransferObjectMapper {
         return CurrencyConverterDataTransferObject(
             currencySymbolBase = currencySymbolBase,
             currencySymbolOther = currencySymbolOther,
-            rate = rate,
-            id = id
+            rate = rate
         )
     }
 

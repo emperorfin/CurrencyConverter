@@ -20,7 +20,7 @@ import emperorfin.android.currencyconverter.data.datasources.local.frameworks.ro
 interface CurrencyRateDao {
 
     @Query("SELECT COUNT(*) FROM $TABLE_NAME")
-    suspend fun countCurrencyRates(): Int
+    suspend fun countAllCurrencyRates(): Int
 
     @Query("SELECT * FROM $TABLE_NAME WHERE $COLUMN_INFO_CURRENCY_SYMBOL_BASE = :currencySymbolBase ORDER BY $COLUMN_INFO_ID ASC")
     suspend fun getCurrencyRates(currencySymbolBase: String): List<CurrencyConverterEntity>
@@ -28,7 +28,7 @@ interface CurrencyRateDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertCurrencyRates(currencyRates: List<CurrencyConverterEntity>): List<Long>
 
-    @Query("DELETE FROM $TABLE_NAME")
-    suspend fun deleteCurrencyRates(): Int
+    @Query("DELETE FROM $TABLE_NAME WHERE $COLUMN_INFO_CURRENCY_SYMBOL_BASE = :currencySymbolBase")
+    suspend fun deleteCurrencyRates(currencySymbolBase: String): Int
 
 }

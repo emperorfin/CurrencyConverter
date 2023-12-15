@@ -12,6 +12,5 @@ import emperorfin.android.currencyconverter.domain.uilayer.events.inputs.currenc
 data class CurrencyConverterDataTransferObject(
     override val currencySymbolBase: String,
     override val currencySymbolOther: String,
-    override val rate: Double,
-    override val id: String = "$currencySymbolBase-$currencySymbolOther",
+    override val rate: Double
 ) : CurrencyConverterDataTransferObjectParams

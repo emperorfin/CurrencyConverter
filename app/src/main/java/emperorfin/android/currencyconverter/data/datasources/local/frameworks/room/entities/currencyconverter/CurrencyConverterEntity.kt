@@ -2,7 +2,6 @@ package emperorfin.android.currencyconverter.data.datasources.local.frameworks.r
 
 import androidx.room.ColumnInfo
 import androidx.room.Entity
-import emperorfin.android.currencyconverter.domain.models.currencyconverter.CurrencyConverterModel
 import emperorfin.android.currencyconverter.domain.uilayer.events.inputs.currencyconverter.CurrencyConverterEntityParams
 
 

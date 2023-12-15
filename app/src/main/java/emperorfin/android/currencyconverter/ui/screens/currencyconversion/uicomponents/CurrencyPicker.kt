@@ -8,6 +8,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CurrencyExchange
 import androidx.compose.material.icons.filled.ExpandLess
 import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material3.DropdownMenu
@@ -49,7 +50,7 @@ import emperorfin.android.currencyconverter.ui.utils.Helpers
 fun CurrencyPicker(
     modifier: Modifier,
     defaultSymbol: String,
-    mapOfCurrencySymbolsToFlag: Map<String, String>,
+    mapOfCurrencySymbolsToFlag: Map<String, String?>,
     onSymbolSelected: (String) -> Unit
 ) {
 
@@ -78,6 +79,13 @@ fun CurrencyPicker(
                     Icon(
                         modifier = Modifier.size(20.dp),
                         bitmap = Helpers.getFlagImageBitMap(base64String),
+                        contentDescription = "Flag",
+                        tint = Color.Unspecified
+                    )
+                } else {
+                    Icon(
+                        modifier = Modifier.size(20.dp),
+                        imageVector = Icons.Filled.CurrencyExchange,
                         contentDescription = "Flag",
                         tint = Color.Unspecified
                     )
@@ -139,12 +147,21 @@ fun CurrencyPicker(
 
                 DropdownMenuItem(
                     leadingIcon = {
-                        Icon(
-                            modifier = Modifier.size(20.dp),
-                            bitmap = Helpers.getFlagImageBitMap(item.value),
-                            contentDescription ="Flag",
-                            tint = Color.Unspecified
-                        )
+                        if (item.value != null) {
+                            Icon(
+                                modifier = Modifier.size(20.dp),
+                                bitmap = Helpers.getFlagImageBitMap(item.value!!),
+                                contentDescription ="Flag",
+                                tint = Color.Unspecified
+                            )
+                        } else {
+                            Icon(
+                                modifier = Modifier.size(20.dp),
+                                imageVector = Icons.Filled.CurrencyExchange,
+                                contentDescription ="Flag",
+                                tint = Color.Unspecified
+                            )
+                        }
                     },
                     text = {
                         Text(text = item.key, fontWeight = FontWeight.SemiBold, fontSize = 14.sp)

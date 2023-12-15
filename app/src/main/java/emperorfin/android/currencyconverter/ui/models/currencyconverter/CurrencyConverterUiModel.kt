@@ -14,4 +14,5 @@ data class CurrencyConverterUiModel(
     override val currencySymbolOther: String,
     override val rate: Double,
     override val id: String = "$currencySymbolBase-$currencySymbolOther",
+    override val currencySymbolOtherFlag: String?,
 ) : CurrencyConverterUiModelParams

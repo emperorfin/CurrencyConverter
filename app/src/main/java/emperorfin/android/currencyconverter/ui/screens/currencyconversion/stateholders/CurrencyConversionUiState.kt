@@ -1,6 +1,6 @@
 package emperorfin.android.currencyconverter.ui.screens.currencyconversion.stateholders
 
-import emperorfin.android.currencyconverter.ui.models.CurrencyRate
+import emperorfin.android.currencyconverter.ui.models.currencyconverter.CurrencyConverterUiModel
 
 
 /*
@@ -10,8 +10,9 @@ import emperorfin.android.currencyconverter.ui.models.CurrencyRate
 
 
 data class CurrencyConversionUiState(
-    val items: List<CurrencyRate> = emptyList(),
-    val mapOfCurrencySymbolsToFlag: Map<String, String> = emptyMap(),
+    val items: List<CurrencyConverterUiModel> = emptyList(),
+    val mapOfCurrencySymbolsToFlag: Map<String, String?> = emptyMap(),
     val isLoading: Boolean = false,
-    val errorMessage: Int? = null
+    val errorMessage: Int? = null,
+    val initRates: Boolean = false
 )
