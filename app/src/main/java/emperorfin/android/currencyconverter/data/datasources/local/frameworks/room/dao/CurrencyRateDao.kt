@@ -22,6 +22,9 @@ interface CurrencyRateDao {
     @Query("SELECT COUNT(*) FROM $TABLE_NAME")
     suspend fun countAllCurrencyRates(): Int
 
+    @Query("SELECT COUNT(*) FROM $TABLE_NAME WHERE $COLUMN_INFO_CURRENCY_SYMBOL_BASE = :currencySymbolBase")
+    suspend fun countCurrencyRates(currencySymbolBase: String): Int
+
     @Query("SELECT * FROM $TABLE_NAME WHERE $COLUMN_INFO_CURRENCY_SYMBOL_BASE = :currencySymbolBase ORDER BY $COLUMN_INFO_ID ASC")
     suspend fun getCurrencyRates(currencySymbolBase: String): List<CurrencyConverterEntity>
 

@@ -10,8 +10,8 @@ import emperorfin.android.currencyconverter.domain.uilayer.events.inputs.currenc
 
 
 data class CurrencyConverterParams(
-    override val id: String?,
-    override val currencySymbolBase: String?,
-    override val currencySymbolOther: String?,
-    override val rate: Double?
+    override val id: String? = null,
+    override val currencySymbolBase: String? = null,
+    override val currencySymbolOther: String? = null,
+    override val rate: Double? = null
 ) : CurrencyConverterModelParams

@@ -13,11 +13,13 @@ import emperorfin.android.currencyconverter.domain.uilayer.events.outputs.Result
 
 interface CurrencyConverterDataSource {
 
-    suspend fun countAllCurrencyRates(): ResultData<Int>
+    suspend fun countAllCurrencyRates(params: Params): ResultData<Int>
+
+    suspend fun countCurrencyRates(params: Params): ResultData<Int>
 
     suspend fun getCurrencyRates(params: Params): ResultData<List<CurrencyConverterModel>>
 
-    suspend fun saveCurrencyRates(currencyRates: List<CurrencyConverterModel>): ResultData<List<Long>>
+    suspend fun saveCurrencyRates(currencyRatesModel: List<CurrencyConverterModel>): ResultData<List<Long>>
 
     suspend fun deleteCurrencyRates(params: Params): ResultData<Int>
 

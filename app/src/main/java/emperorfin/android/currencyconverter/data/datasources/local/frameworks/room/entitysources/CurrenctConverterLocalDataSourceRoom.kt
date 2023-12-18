@@ -1,12 +1,16 @@
 package emperorfin.android.currencyconverter.data.datasources.local.frameworks.room.entitysources
 
 import android.content.Context
-import androidx.annotation.StringRes
 import emperorfin.android.currencyconverter.R
 import emperorfin.android.currencyconverter.data.datasources.local.frameworks.room.dao.CurrencyRateDao
 import emperorfin.android.currencyconverter.data.datasources.local.frameworks.room.entities.currencyconverter.CurrencyConverterEntity
 import emperorfin.android.currencyconverter.data.datasources.local.frameworks.room.entities.currencyconverter.CurrencyConverterEntityMapper
 import emperorfin.android.currencyconverter.domain.datalayer.datasources.CurrencyConverterDataSource
+import emperorfin.android.currencyconverter.domain.exceptions.CurrencyConverterFailure.CurrencyRateLocalError
+import emperorfin.android.currencyconverter.domain.exceptions.CurrencyConverterFailure.NonExistentCurrencyRateDataLocalError
+import emperorfin.android.currencyconverter.domain.exceptions.CurrencyConverterFailure.CurrencyRateListNotAvailableLocalError
+import emperorfin.android.currencyconverter.domain.exceptions.CurrencyConverterFailure.InsertCurrencyRateLocalrror
+import emperorfin.android.currencyconverter.domain.exceptions.CurrencyConverterFailure.DeleteCurrencyRateLocalError
 import emperorfin.android.currencyconverter.domain.models.currencyconverter.CurrencyConverterModel
 import emperorfin.android.currencyconverter.domain.models.currencyconverter.CurrencyConverterModelMapper
 import emperorfin.android.currencyconverter.domain.uilayer.events.inputs.currencyconverter.Params
@@ -35,64 +39,163 @@ class CurrencyConverterLocalDataSourceRoom internal constructor(
 ) : CurrencyConverterDataSource {
 
     private companion object {
-
-        @StringRes val ERROR_MESSAGE_CURRENCY_RATES_UNAVAILABLE: Int =
-            R.string.error_currency_rates_unavailable
-
-        @StringRes val ERROR_MESSAGE_CANT_LOAD_DB_CURRENCY_RATES: Int =
-            R.string.error_loading_db_currency_rates
+        const val NUM_OF_CURRENCY_RATES_0: Int = 0
     }
 
-    override suspend fun countAllCurrencyRates(): ResultData<Int> = withContext(ioDispatcher) {
-        TODO("Not yet implemented")
-//        val numOfAllCurrencyRates = currencyRateDao.countAllCurrencyRates()
-//
-//        if (numOfAllCurrencyRates > 0) {
-//            return@withContext Success(data = numOfAllCurrencyRates)
-//        } else if (numOfAllCurrencyRates == 0) {
-//            return@withContext Error(errorMessage = ERROR_MESSAGE_CURRENCY_RATES_UNAVAILABLE)
-//        }
-//
-//        return@withContext Error(errorMessage = ERROR_MESSAGE_CANT_LOAD_DB_CURRENCY_RATES)
+    override suspend fun countAllCurrencyRates(params: Params): ResultData<Int> = withContext(ioDispatcher) {
+        when(params){
+            is None -> {
+                return@withContext try {
+
+                    val numOfAllCurrencyRates: Int = currencyRateDao.countAllCurrencyRates()
+
+                    if (numOfAllCurrencyRates > NUM_OF_CURRENCY_RATES_0) {
+                        Success(data = numOfAllCurrencyRates)
+                    } else if (numOfAllCurrencyRates == NUM_OF_CURRENCY_RATES_0) {
+                        Error(failure = NonExistentCurrencyRateDataLocalError())
+                    }
+
+                    Error(failure = CurrencyRateLocalError())
+
+                } catch (e: Exception){
+                    Error(failure = CurrencyRateLocalError(cause = e))
+                }
+            }
+            is CurrencyConverterParams -> {
+                throw IllegalArgumentException(
+                    context.getString(R.string.error_inappropriate_argument_passed)
+                )
+            }
+            else -> throw NotImplementedError(context.getString(R.string.error_not_yet_implemented))
+        }
+
+
     }
 
-    override suspend fun getCurrencyRates(params: Params): ResultData<List<CurrencyConverterModel>> = withContext(ioDispatcher) {
-        TODO("Not yet implemented")
-//        when(params){
-//            is None -> {
-//                throw IllegalArgumentException(
-//                    context.getString(R.string.error_inappropriate_argument_passed)
-//                )
-//            }
-//            is CurrencyConverterParams -> {
-//                return@withContext try {
-//                    val currencyRatesEntity: List<CurrencyConverterEntity> =
-//                        currencyRateDao.getCurrencyRates(params.currencySymbolBase!!)
-//
-//                    if (currencyRatesEntity == null)
-//                        Error(errorMessage = ERROR_MESSAGE_CANT_LOAD_DB_CURRENCY_RATES)
-//                    else if (currencyRatesEntity.isEmpty())
-//                        Error(errorMessage = ERROR_MESSAGE_CURRENCY_RATES_UNAVAILABLE)
-//
-//                    val currencyRatesModel = currencyRatesEntity.map {
-//                        currencyConverterModelMapper.transform(it)
-//                    }
-//
-//                    Success(currencyRatesModel)
-//
-//                } catch (e: Exception){
-//                    Error(LocalProductOverviewError(cause = e))
-//                }
-//            }
-//            else -> throw NotImplementedError(context.getString(R.string.error_not_yet_implemented))
-//        }
+    override suspend fun countCurrencyRates(params: Params): ResultData<Int> = withContext(ioDispatcher) {
+        when(params){
+            is None -> {
+                throw IllegalArgumentException(
+                    context.getString(R.string.error_inappropriate_argument_passed)
+                )
+            }
+            is CurrencyConverterParams -> {
+                return@withContext try {
+
+                    val numOfCurrencyRates: Int = currencyRateDao.countCurrencyRates(params.currencySymbolBase!!)
+
+                    if (numOfCurrencyRates > NUM_OF_CURRENCY_RATES_0) {
+                        Success(data = numOfCurrencyRates)
+                    } else if (numOfCurrencyRates == NUM_OF_CURRENCY_RATES_0) {
+                        Error(failure = NonExistentCurrencyRateDataLocalError())
+                    }
+
+                    Error(failure = CurrencyRateLocalError())
+
+                } catch (e: Exception){
+                    Error(failure = CurrencyRateLocalError(cause = e))
+                }
+            }
+            else -> throw NotImplementedError(context.getString(R.string.error_not_yet_implemented))
+        }
     }
 
-    override suspend fun saveCurrencyRates(currencyRates: List<CurrencyConverterModel>): ResultData<List<Long>> {
-        TODO("Not yet implemented")
+    override suspend fun getCurrencyRates(
+        params: Params
+    ): ResultData<List<CurrencyConverterModel>> = withContext(ioDispatcher) {
+
+        when(params){
+            is None -> {
+                throw IllegalArgumentException(
+                    context.getString(R.string.error_inappropriate_argument_passed)
+                )
+            }
+            is CurrencyConverterParams -> {
+                return@withContext try {
+                    val currencyRatesEntity: List<CurrencyConverterEntity> =
+                        currencyRateDao.getCurrencyRates(params.currencySymbolBase!!)
+
+                    if (currencyRatesEntity == null) // Deliberate check but shouldn't do this
+                        Error(failure = CurrencyRateLocalError())
+                    else if (currencyRatesEntity.isEmpty())
+                        Error(
+                            failure = CurrencyRateListNotAvailableLocalError()
+                        )
+
+                    val currencyRatesModel = currencyRatesEntity.map {
+                        currencyConverterModelMapper.transform(it)
+                    }
+
+                    Success(currencyRatesModel)
+
+                } catch (e: Exception){
+                    Error(failure = CurrencyRateLocalError(cause = e))
+                }
+            }
+            else -> throw NotImplementedError(context.getString(R.string.error_not_yet_implemented))
+        }
     }
 
-    override suspend fun deleteCurrencyRates(params: Params): ResultData<Int> {
-        TODO("Not yet implemented")
+    override suspend fun saveCurrencyRates(
+        currencyRatesModel: List<CurrencyConverterModel>
+    ): ResultData<List<Long>> = withContext(ioDispatcher){
+
+        if (currencyRatesModel.isEmpty())
+            return@withContext Error(
+                failure = InsertCurrencyRateLocalrror(message = R.string.error_cant_save_empty_currency_rate_list)
+            )
+
+        val currencyRatesEntity = currencyRatesModel.map {
+            currencyConverterEntityMapper.transform(it)
+        }
+
+        val tableRowIds: List<Long> = currencyRateDao.insertCurrencyRates(currencyRatesEntity)
+
+        if (tableRowIds.size != currencyRatesEntity.size)
+            return@withContext Error(
+                InsertCurrencyRateLocalrror(message = R.string.error_all_currency_rates_not_saved)
+            )
+
+        return@withContext Success(tableRowIds)
+    }
+
+    override suspend fun deleteCurrencyRates(params: Params): ResultData<Int> = withContext(ioDispatcher) {
+        when(params){
+            is None -> {
+                throw IllegalArgumentException(
+                    context.getString(R.string.error_inappropriate_argument_passed)
+                )
+            }
+            is CurrencyConverterParams -> {
+                return@withContext try {
+
+                    val numOfCurrencyRatesResultData: ResultData<Int> = countCurrencyRates(params)
+
+                    val numOfCurrencyRates: Int = if(numOfCurrencyRatesResultData is Error &&
+                        numOfCurrencyRatesResultData.failure is CurrencyRateLocalError){
+                        return@withContext Error(failure = DeleteCurrencyRateLocalError())
+                    } else if(numOfCurrencyRatesResultData is Error &&
+                        numOfCurrencyRatesResultData.failure is NonExistentCurrencyRateDataLocalError) {
+                        NUM_OF_CURRENCY_RATES_0
+                    } else {
+                        (numOfCurrencyRatesResultData as Success).data
+                    }
+
+                    val numOfCurrencyRatesDeleted: Int = currencyRateDao.deleteCurrencyRates(params.currencySymbolBase!!)
+
+                    if (numOfCurrencyRatesDeleted > NUM_OF_CURRENCY_RATES_0 && numOfCurrencyRatesDeleted != numOfCurrencyRates) {
+                        Error(failure = DeleteCurrencyRateLocalError(R.string.error_deleting_currency_rates))
+                    } else {
+                        Error(failure = DeleteCurrencyRateLocalError())
+                    }
+
+                    return@withContext Success(numOfCurrencyRatesDeleted)
+
+                } catch (e: Exception){
+                    Error(failure = DeleteCurrencyRateLocalError(cause = e))
+                }
+            }
+            else -> throw NotImplementedError(context.getString(R.string.error_not_yet_implemented))
+        }
     }
 }

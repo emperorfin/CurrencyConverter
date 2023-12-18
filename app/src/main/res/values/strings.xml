@@ -15,6 +15,9 @@
     <string name="error_inappropriate_argument_passed">The argument passed is inappropriate.</string>
     <string name="error_not_yet_implemented">Not yet implemented.</string>
     <string name="error_unexpected_during_conversion">Unexpected error during currency conversion.</string>
+    <string name="error_cant_save_empty_currency_rate_list">An empty list of currency rates cannot be saved.</string>
+    <string name="error_all_currency_rates_not_saved">All the currency rate were not saved.</string>
+    <string name="error_deleting_currency_rates">Error deleting currency rates.</string>
 
     <string name="error_memory_currency_rate_list_not_available">Currency rate list not available memory error.</string>
     <string name="error_local_currency_rate_list_not_available">Currency rate list not available local error.</string>

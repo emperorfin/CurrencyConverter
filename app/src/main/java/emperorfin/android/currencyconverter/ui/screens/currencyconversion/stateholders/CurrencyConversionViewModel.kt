@@ -7,11 +7,16 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import emperorfin.android.currencyconverter.R
 import emperorfin.android.currencyconverter.data.datasources.local.frameworks.room.AppRoomDatabase
+import emperorfin.android.currencyconverter.data.datasources.local.frameworks.room.entitysources.CurrencyConverterLocalDataSourceRoom
 import emperorfin.android.currencyconverter.domain.exceptions.CurrencyConverterFailure
+import emperorfin.android.currencyconverter.domain.models.currencyconverter.CurrencyConverterModel
 import emperorfin.android.currencyconverter.domain.models.currencyconverter.CurrencyConverterModelMapper
+import emperorfin.android.currencyconverter.domain.uilayer.events.inputs.currencyconverter.Params
 import emperorfin.android.currencyconverter.ui.models.currencyconverter.CurrencyConverterUiModel
 import emperorfin.android.currencyconverter.ui.models.currencyconverter.CurrencyConverterUiModelMapper
 import emperorfin.android.currencyconverter.domain.uilayer.events.outputs.ResultData
+import emperorfin.android.currencyconverter.domain.uilayer.events.outputs.succeeded
+import emperorfin.android.currencyconverter.ui.screens.events.inputs.currencyconverter.CurrencyConverterParams
 import emperorfin.android.currencyconverter.ui.utils.CurrencyConverterSampleDataGeneratorUtil
 import emperorfin.android.currencyconverter.ui.utils.Helpers
 import emperorfin.android.currencyconverter.ui.utils.WhileUiSubscribed
@@ -31,7 +36,9 @@ import kotlin.math.roundToInt
  */
 
 
-class CurrencyConversionViewModel(application: Application) : AndroidViewModel(application) {
+class CurrencyConversionViewModel(
+    application: Application
+) : AndroidViewModel(application) {
 
     private companion object {
 
@@ -45,6 +52,9 @@ class CurrencyConversionViewModel(application: Application) : AndroidViewModel(a
     private val coroutineDispatcherIo = Dispatchers.IO
 
     private val applicationContext = getApplication<Application>()
+
+    private val currencyConverterModelMapper = CurrencyConverterModelMapper()
+    private val currencyConverterUiModelMapper = CurrencyConverterUiModelMapper(context = applicationContext)
 
     private var initCurrencyRates = true
 
@@ -314,11 +324,13 @@ class CurrencyConversionViewModel(application: Application) : AndroidViewModel(a
     fun initCurrencyRates(context: Context = applicationContext, isRefresh: Boolean = false) {
 
         // Option 1
-        getInMemoryCurrencyRates(context = context, isRefresh = isRefresh)
+//        getInMemoryCurrencyRates(context = context, isRefresh = isRefresh)
         // Option 2
 //        generateCurrencyRatesSampleData(isRefresh = isRefresh)
         // Option 3
 //        getDatabaseCurrencyRatesSampleDataWithoutLocalDataSource(isRefresh = isRefresh)
+        // Option 4
+        getDatabaseCurrencyRatesSampleDataViaLocalDataSource(isRefresh = isRefresh)
 
     }
 
@@ -476,8 +488,8 @@ class CurrencyConversionViewModel(application: Application) : AndroidViewModel(a
             .mCurrencyRateDao
             .getCurrencyRates(currencySymbolBase = CURRENCY_SYMBOL_USD)
 
-        val currencyConverterModelMapper = CurrencyConverterModelMapper()
-        val currencyConverterUiModelMapper = CurrencyConverterUiModelMapper(context = applicationContext)
+        val currencyConverterModelMapper = currencyConverterModelMapper
+        val currencyConverterUiModelMapper = currencyConverterUiModelMapper
 
         val currencyRatesUiModel: List<CurrencyConverterUiModel> = currencyRatesEntity.map {
             currencyConverterModelMapper.transform(it)
@@ -492,6 +504,48 @@ class CurrencyConversionViewModel(application: Application) : AndroidViewModel(a
 //        _currencyRatesWithFlags.value = ResultData.Success(data = currencyRatesUiModel)
         if (!isRefresh) {
             _currencyRatesWithFlags.value = ResultData.Success(data = currencyRatesUiModel)
+        }
+
+    }
+
+    private fun getDatabaseCurrencyRatesSampleDataViaLocalDataSource(
+        isRefresh: Boolean
+    ) = viewModelScope.launch(context = coroutineDispatcherIo) {
+
+        _currencyRatesWithFlags.value = ResultData.Loading
+
+        val localDataSourceRoom = CurrencyConverterLocalDataSourceRoom(
+            applicationContext,
+            AppRoomDatabase.getInstance(applicationContext).mCurrencyRateDao
+        )
+
+        val params = CurrencyConverterParams(currencySymbolBase = CURRENCY_SYMBOL_USD)
+
+        val currencyRatesResultData: ResultData<List<CurrencyConverterModel>> = localDataSourceRoom.getCurrencyRates(params)
+
+        if (currencyRatesResultData.succeeded) {
+            val currencyRatesEntity = (currencyRatesResultData as ResultData.Success).data
+
+            val currencyConverterModelMapper = currencyConverterModelMapper
+            val currencyConverterUiModelMapper = currencyConverterUiModelMapper
+
+            val currencyRatesUiModel: List<CurrencyConverterUiModel> = currencyRatesEntity.map {
+                currencyConverterModelMapper.transform(it)
+            }.map {
+                currencyConverterUiModelMapper.transform(it)
+            }
+
+            initCurrencyRates = false
+
+            currencyRatesWithFlagsDefault = currencyRatesUiModel
+
+//        _currencyRatesWithFlags.value = ResultData.Success(data = currencyRatesUiModel)
+            if (!isRefresh) {
+                _currencyRatesWithFlags.value = ResultData.Success(data = currencyRatesUiModel)
+            }
+        } else {
+            val error: ResultData.Error = (currencyRatesResultData as ResultData.Error)
+            _currencyRatesWithFlags.value = error
         }
 
     }
