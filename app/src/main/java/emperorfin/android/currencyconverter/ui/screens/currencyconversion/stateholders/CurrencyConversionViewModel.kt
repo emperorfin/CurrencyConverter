@@ -5,6 +5,7 @@ import android.content.Context
 import android.content.res.AssetManager
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import emperorfin.android.currencyconverter.R
 import emperorfin.android.currencyconverter.data.datasources.local.frameworks.room.AppRoomDatabase
 import emperorfin.android.currencyconverter.domain.exceptions.CurrencyConverterFailure
 import emperorfin.android.currencyconverter.domain.models.currencyconverter.CurrencyConverterModelMapper
@@ -14,7 +15,6 @@ import emperorfin.android.currencyconverter.domain.uilayer.events.outputs.Result
 import emperorfin.android.currencyconverter.ui.utils.CurrencyConverterSampleDataGeneratorUtil
 import emperorfin.android.currencyconverter.ui.utils.Helpers
 import emperorfin.android.currencyconverter.ui.utils.WhileUiSubscribed
-import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -22,7 +22,6 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import kotlin.coroutines.CoroutineContext
 import kotlin.math.roundToInt
 
 
@@ -48,6 +47,8 @@ class CurrencyConversionViewModel(application: Application) : AndroidViewModel(a
     private val applicationContext = getApplication<Application>()
 
     private var initCurrencyRates = true
+
+    private var currencyRatesWithFlagsDefault = listOf<CurrencyConverterUiModel>()
 
     private val currencyRatesInMemory: Map<String, Number> = mapOf(
         "AED" to 3.6721,
@@ -235,29 +236,40 @@ class CurrencyConversionViewModel(application: Application) : AndroidViewModel(a
         // Option 2
         simulateNoCurrencyRatesOnAppStartup()
         // Option 3
-//        initCurrencyRates()
+//        initCurrencyRates(context = applicationContext)
 
     }
 
-    fun convert(assets: AssetManager = applicationContext.assets, baseAmount: Int, baseCurrencySymbol: String) {
+    fun convert(baseAmount: Int, baseCurrencySymbol: String) {
 
-        val currencyRatesWithFlags: ResultData<List<CurrencyConverterUiModel>> = _currencyRatesWithFlags.value
+        val currencyRatesWithFlagsResultData: ResultData<List<CurrencyConverterUiModel>> = _currencyRatesWithFlags.value
 
-        if (currencyRatesWithFlags is ResultData.Error) {
-            _currencyRatesWithFlags.value = currencyRatesWithFlags
+        if (currencyRatesWithFlagsResultData is ResultData.Error) {
+            _currencyRatesWithFlags.value = currencyRatesWithFlagsResultData
+
+            return
+        } /*else if (currencyRatesWithFlagsResultData is ResultData.Loading) {
+            return
+        }*/
+
+//        val currencyRatesWithFlags: List<CurrencyConverterUiModel> = (currencyRatesWithFlagsResultData as ResultData.Success).data
+        val currencyRatesWithFlags: List<CurrencyConverterUiModel> = currencyRatesWithFlagsDefault
+
+        if (currencyRatesWithFlags.isEmpty()) {
+            _currencyRatesWithFlags.value = ResultData.Error(
+                failure = CurrencyConverterFailure.CurrencyRateMemoryError(message = R.string.error_unexpected_during_conversion)
+            )
 
             return
         }
 
-        val currencyRatesWithFlagsOld: List<CurrencyConverterUiModel> = (currencyRatesWithFlags as ResultData.Success).data
-
         _currencyRatesWithFlags.value = ResultData.Loading
 
-        val currencyRatesWithFlags2 = mutableListOf<CurrencyConverterUiModel>()
+        val currencyRatesWithFlagsNew = mutableListOf<CurrencyConverterUiModel>()
 
-        currencyRatesWithFlagsOld.forEach {
+        currencyRatesWithFlags.forEach {
 
-            val currencyRateWithFlag: CurrencyConverterUiModel = currencyRatesWithFlagsOld.single { currencyRateWithFlag ->
+            val currencyRateWithFlag: CurrencyConverterUiModel = currencyRatesWithFlags.single { currencyRateWithFlag ->
                 currencyRateWithFlag.currencySymbolOther == baseCurrencySymbol
             }
 
@@ -276,7 +288,7 @@ class CurrencyConversionViewModel(application: Application) : AndroidViewModel(a
                     currencySymbolOtherFlag = it.currencySymbolOtherFlag
                 )
 
-                currencyRatesWithFlags2.add(currencyRateWithFlagNew)
+                currencyRatesWithFlagsNew.add(currencyRateWithFlagNew)
             } else {
 
                 val newRate = (currencyRateValue / baseCurrencySymbolValue) * baseAmount
@@ -289,24 +301,36 @@ class CurrencyConversionViewModel(application: Application) : AndroidViewModel(a
                     currencySymbolOtherFlag = it.currencySymbolOtherFlag
                 )
 
-                currencyRatesWithFlags2.add(currencyRateWithFlagNew)
+                currencyRatesWithFlagsNew.add(currencyRateWithFlagNew)
             }
         }
 
         initCurrencyRates = false
 
-        _currencyRatesWithFlags.value = ResultData.Success(data = currencyRatesWithFlags2)
+        _currencyRatesWithFlags.value = ResultData.Success(data = currencyRatesWithFlagsNew)
+
     }
 
-    fun initCurrencyRates(context: Context = applicationContext) {
+    fun initCurrencyRates(context: Context = applicationContext, isRefresh: Boolean = false) {
 
         // Option 1
-        getInMemoryCurrencyRates(context = context)
+        getInMemoryCurrencyRates(context = context, isRefresh = isRefresh)
         // Option 2
-//        generateCurrencyRatesSampleData()
+//        generateCurrencyRatesSampleData(isRefresh = isRefresh)
         // Option 3
-//        getDatabaseCurrencyRatesSampleDataWithoutLocalDataSource()
+//        getDatabaseCurrencyRatesSampleDataWithoutLocalDataSource(isRefresh = isRefresh)
 
+    }
+
+    // Running the content of this function inside of a viewModelScope.launch makes
+    // the contents to execute in sequence i.e. initCurrencyRates() must return before
+    // convert() function gets invoked as suspend functions are synchronous ( https://stackoverflow.com/a/69406442 ).
+    // Not running the block of this function inside of viewModelScope.launch might cause convert()
+    // to run without initCurrencyRates() returning which would cause an exception.
+    fun refreshCurrencyRates(context: Context = applicationContext, baseAmount: Int, baseCurrencySymbol: String) /*= viewModelScope.launch(context = coroutineDispatcherDefault)*/ {
+        initCurrencyRates(context = context, isRefresh = true)
+
+        convert(baseAmount = baseAmount, baseCurrencySymbol = baseCurrencySymbol)
     }
 
     val uiState: StateFlow<CurrencyConversionUiState> = combine(
@@ -383,7 +407,9 @@ class CurrencyConversionViewModel(application: Application) : AndroidViewModel(a
         )
     }
 
-    private fun getInMemoryCurrencyRates(context: Context) = viewModelScope.launch(context = coroutineDispatcherDefault) {
+    private fun getInMemoryCurrencyRates(
+        context: Context, isRefresh: Boolean
+    ) = viewModelScope.launch(context = coroutineDispatcherDefault) {
         _currencyRatesWithFlags.value = ResultData.Loading
 
         val currencyRates = mutableListOf<CurrencyConverterUiModel>()
@@ -408,11 +434,18 @@ class CurrencyConversionViewModel(application: Application) : AndroidViewModel(a
 
         initCurrencyRates = false
 
-        _currencyRatesWithFlags.value = ResultData.Success(data = currencyRates)
+        currencyRatesWithFlagsDefault = currencyRates
+
+//        _currencyRatesWithFlags.value = ResultData.Success(data = currencyRates)
+        if (!isRefresh) {
+            _currencyRatesWithFlags.value = ResultData.Success(data = currencyRates)
+        }
 
     }
 
-    private fun generateCurrencyRatesSampleData() = viewModelScope.launch(context = coroutineDispatcherDefault) {
+    private fun generateCurrencyRatesSampleData(
+        isRefresh: Boolean
+    ) = viewModelScope.launch(context = coroutineDispatcherDefault) {
 
         _currencyRatesWithFlags.value = ResultData.Loading
 
@@ -424,10 +457,17 @@ class CurrencyConversionViewModel(application: Application) : AndroidViewModel(a
 
         initCurrencyRates = false
 
-        _currencyRatesWithFlags.value = ResultData.Success(data = currencyConverterList)
+        currencyRatesWithFlagsDefault = currencyConverterList
+
+//        _currencyRatesWithFlags.value = ResultData.Success(data = currencyConverterList)
+        if (!isRefresh) {
+            _currencyRatesWithFlags.value = ResultData.Success(data = currencyConverterList)
+        }
     }
 
-    private fun getDatabaseCurrencyRatesSampleDataWithoutLocalDataSource() = viewModelScope.launch(context = coroutineDispatcherIo) {
+    private fun getDatabaseCurrencyRatesSampleDataWithoutLocalDataSource(
+        isRefresh: Boolean
+    ) = viewModelScope.launch(context = coroutineDispatcherIo) {
 
         _currencyRatesWithFlags.value = ResultData.Loading
 
@@ -447,7 +487,13 @@ class CurrencyConversionViewModel(application: Application) : AndroidViewModel(a
 
         initCurrencyRates = false
 
-        _currencyRatesWithFlags.value = ResultData.Success(data = currencyRatesUiModel)
+        currencyRatesWithFlagsDefault = currencyRatesUiModel
+
+//        _currencyRatesWithFlags.value = ResultData.Success(data = currencyRatesUiModel)
+        if (!isRefresh) {
+            _currencyRatesWithFlags.value = ResultData.Success(data = currencyRatesUiModel)
+        }
+
     }
 
 }

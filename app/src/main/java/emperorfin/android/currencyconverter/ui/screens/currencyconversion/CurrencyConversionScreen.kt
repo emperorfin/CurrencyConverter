@@ -105,11 +105,11 @@ fun CurrencyConversionScreen(
                     if (uiState.errorMessage != null && uiState.initRates) {
                         viewModel.initCurrencyRates()
                     } else {
-//                        viewModel.refreshRates(
-//                            assets = context.assets,
-//                            baseAmount = baseAmountRefresh,
-//                            baseCurrencySymbol = baseCurrencySymbolRefresh
-//                        )
+                        viewModel.refreshCurrencyRates(
+                            context = context,
+                            baseAmount = baseAmountRefresh,
+                            baseCurrencySymbol = baseCurrencySymbolRefresh
+                        )
                     }
                 }
             )
@@ -132,14 +132,14 @@ fun CurrencyConversionScreen(
                 if (uiState.errorMessage != null && uiState.initRates) {
                     viewModel.initCurrencyRates()
                 } else {
-//                        viewModel.refreshRates(
-//                            assets = context.assets,
-//                            baseAmount = baseAmountRefresh,
-//                            baseCurrencySymbol = baseCurrencySymbolRefresh
-//                        )
+                    viewModel.refreshCurrencyRates(
+                        context = context,
+                        baseAmount = baseAmountRefresh,
+                        baseCurrencySymbol = baseCurrencySymbolRefresh
+                    )
                 }
 
-            }, // viewModel::refresh,
+            },
             mapOfCurrencySymbolsToFlag = uiState.mapOfCurrencySymbolsToFlag,//mapOfCurrencySymbolsToFlag,
             modifier = Modifier.padding(paddingValues),
             onConvert = { baseAmount, baseCurrencySymbol ->
@@ -148,7 +148,6 @@ fun CurrencyConversionScreen(
                 baseCurrencySymbolRefresh = baseCurrencySymbol
 
                 viewModel.convert(
-                    assets = context.assets,
                     baseAmount = baseAmount,
                     baseCurrencySymbol = baseCurrencySymbol
                 )

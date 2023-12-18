@@ -14,6 +14,7 @@
     <string name="error_loading_db_currency_rates">Error loading currency rates from local database.</string>
     <string name="error_inappropriate_argument_passed">The argument passed is inappropriate.</string>
     <string name="error_not_yet_implemented">Not yet implemented.</string>
+    <string name="error_unexpected_during_conversion">Unexpected error during currency conversion.</string>
 
     <string name="error_memory_currency_rate_list_not_available">Currency rate list not available memory error.</string>
     <string name="error_local_currency_rate_list_not_available">Currency rate list not available local error.</string>
