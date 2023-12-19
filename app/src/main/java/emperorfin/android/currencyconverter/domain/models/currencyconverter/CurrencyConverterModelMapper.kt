@@ -19,7 +19,7 @@ class CurrencyConverterModelMapper {
         val currencySymbolOther: String = currencyConverterDto.currencySymbolOther!!
         val rate: Double = currencyConverterDto.rate!!
 
-        return CurrencyConverterModel(
+        return CurrencyConverterModel.newInstance(
             currencySymbolBase = currencySymbolBase,
             currencySymbolOther = currencySymbolOther,
             rate = rate
@@ -33,7 +33,7 @@ class CurrencyConverterModelMapper {
         val currencySymbolOther: String = currencyConverterEntity.currencySymbolOther!!
         val rate: Double = currencyConverterEntity.rate!!
 
-        return CurrencyConverterModel(
+        return CurrencyConverterModel.newInstance(
             currencySymbolBase = currencySymbolBase,
             currencySymbolOther = currencySymbolOther,
             rate = rate,
@@ -48,7 +48,7 @@ class CurrencyConverterModelMapper {
         val currencySymbolOther: String = currencyConverterUiModel.currencySymbolOther!!
         val rate: Double = currencyConverterUiModel.rate!!
 
-        return CurrencyConverterModel(
+        return CurrencyConverterModel.newInstance(
             currencySymbolBase = currencySymbolBase,
             currencySymbolOther = currencySymbolOther,
             rate = rate,

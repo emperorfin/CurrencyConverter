@@ -19,6 +19,9 @@ android {
         vectorDrawables {
             useSupportLibrary true
         }
+
+        buildConfigField "String", "OPEN_EXCHANGE_RATES_BASE_URL", "\"https://openexchangerates.org/api/\""
+        buildConfigField "String", "API_KEY", "\"9fb11070d5a842b98dc33609fc25046c\""
     }
 
     buildTypes {
@@ -39,6 +42,8 @@ android {
     }
     buildFeatures {
         compose true
+
+        buildConfig true
     }
     composeOptions {
 //        Compose to Kotlin Compatibility Map ( https://developer.android.com/jetpack/androidx/releases/compose-kotlin )
@@ -95,6 +100,9 @@ dependencies {
     implementation "androidx.room:room-runtime:$androidx_room"
     implementation "androidx.room:room-ktx:$androidx_room"
     kapt "androidx.room:room-compiler:$androidx_room"
+
+    implementation "com.squareup.retrofit2:retrofit:$com_squareup_retrofit"
+    implementation "com.squareup.retrofit2:converter-moshi:$com_squareup_retrofit"
 
 
     // TEST IMPLEMENTATIONS

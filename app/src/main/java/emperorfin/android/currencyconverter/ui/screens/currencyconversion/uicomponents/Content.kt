@@ -229,31 +229,31 @@ private fun ContentPreview() {
                 context = ComponentActivity(),
                 loading = false,
                 currencyRates = listOf(
-                    CurrencyConverterUiModel(
+                    CurrencyConverterUiModel.newInstance(
                         currencySymbolBase = "USD",
                         currencySymbolOther = "AFN",
                         rate = 73.6,
                         currencySymbolOtherFlag = flagAfn,
                     ),
-                    CurrencyConverterUiModel(
+                    CurrencyConverterUiModel.newInstance(
                         currencySymbolBase = "USD",
                         currencySymbolOther = "ALL",
                         rate = 95.8,
                         currencySymbolOtherFlag = flagAll,
                     ),
-                    CurrencyConverterUiModel(
+                    CurrencyConverterUiModel.newInstance(
                         currencySymbolBase = "USD",
                         currencySymbolOther = "AMD",
                         rate = 401.7,
                         currencySymbolOtherFlag = flagAmd,
                     ),
-                    CurrencyConverterUiModel(
+                    CurrencyConverterUiModel.newInstance(
                         currencySymbolBase = "USD",
                         currencySymbolOther = "ANG",
                         rate = 1.8,
                         currencySymbolOtherFlag = flagAng,
                     ),
-                    CurrencyConverterUiModel(
+                    CurrencyConverterUiModel.newInstance(
                         currencySymbolBase = "USD",
                         currencySymbolOther = "EUR",
                         rate = 1.8,

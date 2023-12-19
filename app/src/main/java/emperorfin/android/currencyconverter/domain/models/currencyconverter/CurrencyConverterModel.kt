@@ -14,4 +14,24 @@ data class CurrencyConverterModel(
     override val currencySymbolOther: String,
     override val rate: Double,
     override val id: String = "$currencySymbolBase-$currencySymbolOther",
-) : CurrencyConverterModelParams
+) : CurrencyConverterModelParams {
+
+    companion object {
+
+        fun newInstance(
+            currencySymbolBase: String,
+            currencySymbolOther: String,
+            rate: Double,
+            id: String = "$currencySymbolBase-$currencySymbolOther",
+        ): CurrencyConverterModel {
+            return CurrencyConverterModel(
+                currencySymbolBase = currencySymbolBase,
+                currencySymbolOther = currencySymbolOther,
+                rate = rate,
+                id = id
+            )
+        }
+
+    }
+
+}

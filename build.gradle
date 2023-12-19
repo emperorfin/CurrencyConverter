@@ -21,6 +21,7 @@ buildscript {
         madrapps_plot = '0.1.1'
 //        androidx_room = '2.3.0'
         androidx_room = '2.5.2'
+        com_squareup_retrofit = '2.9.0'
     }
 }
 

@@ -2,16 +2,15 @@ package emperorfin.android.currencyconverter.ui.screens.currencyconversion.state
 
 import android.app.Application
 import android.content.Context
-import android.content.res.AssetManager
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import emperorfin.android.currencyconverter.R
 import emperorfin.android.currencyconverter.data.datasources.local.frameworks.room.AppRoomDatabase
 import emperorfin.android.currencyconverter.data.datasources.local.frameworks.room.entitysources.CurrencyConverterLocalDataSourceRoom
+import emperorfin.android.currencyconverter.data.datasources.remote.frameworks.retrofit.modelsources.CurrencyConverterRemoteDataSourceRetrofit
 import emperorfin.android.currencyconverter.domain.exceptions.CurrencyConverterFailure
 import emperorfin.android.currencyconverter.domain.models.currencyconverter.CurrencyConverterModel
 import emperorfin.android.currencyconverter.domain.models.currencyconverter.CurrencyConverterModelMapper
-import emperorfin.android.currencyconverter.domain.uilayer.events.inputs.currencyconverter.Params
 import emperorfin.android.currencyconverter.ui.models.currencyconverter.CurrencyConverterUiModel
 import emperorfin.android.currencyconverter.ui.models.currencyconverter.CurrencyConverterUiModelMapper
 import emperorfin.android.currencyconverter.domain.uilayer.events.outputs.ResultData
@@ -291,7 +290,7 @@ class CurrencyConversionViewModel(
                 val newRate = currencyRateValue * baseAmount
                 val rateToThreeDecimalPlace = roundToThreeDecimalPlaces(newRate)
 
-                val currencyRateWithFlagNew = CurrencyConverterUiModel(
+                val currencyRateWithFlagNew = CurrencyConverterUiModel.newInstance(
                     currencySymbolBase = baseCurrencySymbol,
                     currencySymbolOther = it.currencySymbolOther,
                     rate = rateToThreeDecimalPlace,
@@ -304,7 +303,7 @@ class CurrencyConversionViewModel(
                 val newRate = (currencyRateValue / baseCurrencySymbolValue) * baseAmount
                 val rateToThreeDecimalPlace = roundToThreeDecimalPlaces(newRate)
 
-                val currencyRateWithFlagNew = CurrencyConverterUiModel(
+                val currencyRateWithFlagNew = CurrencyConverterUiModel.newInstance(
                     currencySymbolBase = baseCurrencySymbol,
                     currencySymbolOther = it.currencySymbolOther,
                     rate = rateToThreeDecimalPlace,
@@ -330,7 +329,9 @@ class CurrencyConversionViewModel(
         // Option 3
 //        getDatabaseCurrencyRatesSampleDataWithoutLocalDataSource(isRefresh = isRefresh)
         // Option 4
-        getDatabaseCurrencyRatesSampleDataViaLocalDataSource(isRefresh = isRefresh)
+//        getDatabaseCurrencyRatesSampleDataViaLocalDataSource(isRefresh = isRefresh)
+        // Option 5
+        getDatabaseCurrencyRatesRealDataViaRemoteDataSource(isRefresh = isRefresh)
 
     }
 
@@ -433,7 +434,7 @@ class CurrencyConversionViewModel(
             val currencySymbolOther: String = it.key
             val currencySymbolOtherFlag: String? = mapOfCurrencySymbolsToFlag[currencySymbolOther]
 
-            val currencyRate = CurrencyConverterUiModel(
+            val currencyRate = CurrencyConverterUiModel.newInstance(
                 currencySymbolBase = CURRENCY_SYMBOL_USD,
                 currencySymbolOther = currencySymbolOther,
                 rate = it.value.toDouble(),
@@ -522,6 +523,47 @@ class CurrencyConversionViewModel(
         val params = CurrencyConverterParams(currencySymbolBase = CURRENCY_SYMBOL_USD)
 
         val currencyRatesResultData: ResultData<List<CurrencyConverterModel>> = localDataSourceRoom.getCurrencyRates(params)
+
+        if (currencyRatesResultData.succeeded) {
+            val currencyRatesEntity = (currencyRatesResultData as ResultData.Success).data
+
+            val currencyConverterModelMapper = currencyConverterModelMapper
+            val currencyConverterUiModelMapper = currencyConverterUiModelMapper
+
+            val currencyRatesUiModel: List<CurrencyConverterUiModel> = currencyRatesEntity.map {
+                currencyConverterModelMapper.transform(it)
+            }.map {
+                currencyConverterUiModelMapper.transform(it)
+            }
+
+            initCurrencyRates = false
+
+            currencyRatesWithFlagsDefault = currencyRatesUiModel
+
+//        _currencyRatesWithFlags.value = ResultData.Success(data = currencyRatesUiModel)
+            if (!isRefresh) {
+                _currencyRatesWithFlags.value = ResultData.Success(data = currencyRatesUiModel)
+            }
+        } else {
+            val error: ResultData.Error = (currencyRatesResultData as ResultData.Error)
+            _currencyRatesWithFlags.value = error
+        }
+
+    }
+
+    private fun getDatabaseCurrencyRatesRealDataViaRemoteDataSource(
+        isRefresh: Boolean
+    ) = viewModelScope.launch(context = coroutineDispatcherIo) {
+
+        _currencyRatesWithFlags.value = ResultData.Loading
+
+        val remoteDataSourceRetrofit = CurrencyConverterRemoteDataSourceRetrofit(
+            context = applicationContext
+        )
+
+        val params = CurrencyConverterParams(currencySymbolBase = CURRENCY_SYMBOL_USD)
+
+        val currencyRatesResultData: ResultData<List<CurrencyConverterModel>> = remoteDataSourceRetrofit.getCurrencyRates(params)
 
         if (currencyRatesResultData.succeeded) {
             val currencyRatesEntity = (currencyRatesResultData as ResultData.Success).data

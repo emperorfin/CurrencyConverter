@@ -26,7 +26,7 @@ class CurrencyConverterUiModelMapper(
 
         val currencySymbolOtherFlag: String? = mapOfCurrencySymbolsToFlag[currencySymbolOther]
 
-        return CurrencyConverterUiModel(
+        return CurrencyConverterUiModel.newInstance(
             currencySymbolBase = currencySymbolBase,
             currencySymbolOther = currencySymbolOther,
             rate = rate,

@@ -13,4 +13,22 @@ data class CurrencyConverterDataTransferObject(
     override val currencySymbolBase: String,
     override val currencySymbolOther: String,
     override val rate: Double
-) : CurrencyConverterDataTransferObjectParams
+) : CurrencyConverterDataTransferObjectParams {
+
+    companion object {
+
+        fun newInstance(
+            currencySymbolBase: String,
+            currencySymbolOther: String,
+            rate: Double
+        ): CurrencyConverterDataTransferObject {
+            return CurrencyConverterDataTransferObject(
+                currencySymbolBase = currencySymbolBase,
+                currencySymbolOther = currencySymbolOther,
+                rate = rate
+            )
+        }
+
+    }
+
+}

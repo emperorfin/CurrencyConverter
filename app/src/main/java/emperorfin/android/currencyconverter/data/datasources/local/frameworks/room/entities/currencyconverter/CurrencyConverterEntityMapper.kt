@@ -18,7 +18,7 @@ class CurrencyConverterEntityMapper {
         val currencySymbolOther: String = currencyConverterModel.currencySymbolOther
         val rate: Double = currencyConverterModel.rate
 
-        return CurrencyConverterEntity(
+        return CurrencyConverterEntity.newInstance(
             currencySymbolBase = currencySymbolBase,
             currencySymbolOther = currencySymbolOther,
             rate = rate,
