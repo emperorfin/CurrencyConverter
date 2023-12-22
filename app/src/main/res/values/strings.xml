@@ -18,6 +18,8 @@
     <string name="error_cant_save_empty_currency_rate_list">An empty list of currency rates cannot be saved.</string>
     <string name="error_all_currency_rates_not_saved">All the currency rate were not saved.</string>
     <string name="error_deleting_currency_rates">Error deleting currency rates.</string>
+    <string name="error_fetching_from_remote_and_local">Error fetching from remote and local.</string>
+    <string name="error_cant_force_refresh_currency_rates_remote_data_source_unavailable">Can\'t force refresh currency rates. Remote data source is unavailable..</string>
 
     <string name="error_memory_currency_rate_list_not_available">Currency rate list not available memory error.</string>
     <string name="error_local_currency_rate_list_not_available">Currency rate list not available local error.</string>
@@ -41,6 +43,8 @@
     <string name="error_local_non_existent_currency_rate_data">Non existent currency rate data local error.</string>
     <string name="error_remote_non_existent_currency_rate_data">Non existent currency rate data remote error.</string>
     <string name="error_repository_get_currency_rate">Get currency rate repository error.</string>
+    <string name="error_repository_insert_currency_rate">Insert currency rate repository error.</string>
+    <string name="error_repository_delete_currency_rate">Delete currency rate repository error.</string>
 
     <!-- Content Descriptions -->
     <string name="currency_conversion_header_image_content_description">Currency conversion header image</string>

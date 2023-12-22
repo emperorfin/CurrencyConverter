@@ -2,75 +2,27 @@ package emperorfin.android.currencyconverter.ui.screens.currencyconversion
 
 import android.app.Application
 import android.content.Context
-import android.widget.Toast
 import androidx.activity.ComponentActivity
-import androidx.annotation.DrawableRes
-import androidx.annotation.StringRes
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.CurrencyExchange
-import androidx.compose.material3.Icon
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Modifier
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.dimensionResource
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.geometry.Size
-import androidx.core.text.isDigitsOnly
 import androidx.lifecycle.viewmodel.compose.viewModel
 //import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import emperorfin.android.currencyconverter.R
-import emperorfin.android.currencyconverter.ui.models.currencyconverter.CurrencyConverterUiModel
 import emperorfin.android.currencyconverter.ui.screens.currencyconversion.stateholders.CurrencyConversionViewModel
 import emperorfin.android.currencyconverter.ui.screens.currencyconversion.stateholders.CurrencyConversionViewModelFactory
-import emperorfin.android.currencyconverter.ui.screens.currencyconversion.uicomponents.AppName
 import emperorfin.android.currencyconverter.ui.screens.currencyconversion.uicomponents.Content
-import emperorfin.android.currencyconverter.ui.screens.currencyconversion.uicomponents.CurrencyPicker
-import emperorfin.android.currencyconverter.ui.screens.currencyconversion.uicomponents.LoadingIndicator
-import emperorfin.android.currencyconverter.ui.screens.currencyconversion.uicomponents.RateTextField
-import emperorfin.android.currencyconverter.ui.screens.currencyconversion.uicomponents.EmptyContent
 import emperorfin.android.currencyconverter.ui.theme.CurrencyConverterTheme
 import emperorfin.android.currencyconverter.ui.utils.CurrencyConversionTopAppBar
-import emperorfin.android.currencyconverter.ui.utils.Helpers
-import emperorfin.android.currencyconverter.ui.utils.LoadingContent
 
 
 /*
@@ -86,7 +38,8 @@ fun CurrencyConversionScreen(
     openDrawer: () -> Unit,
     mapOfCurrencySymbolsToFlag: MutableMap<String, String>,
     viewModel: CurrencyConversionViewModel = viewModel(factory = CurrencyConversionViewModelFactory(
-        context.applicationContext as Application
+        application = context.applicationContext as Application,
+        currencyConverterRepository = CurrencyConversionViewModel.getCurrencyConverterRepository(context.applicationContext as Application)
     )),
 ) {
 

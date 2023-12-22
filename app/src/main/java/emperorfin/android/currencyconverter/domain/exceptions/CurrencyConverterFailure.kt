@@ -126,4 +126,14 @@ sealed class CurrencyConverterFailure(
         @StringRes val message: Int = R.string.error_repository_get_currency_rate,
         val cause: Throwable? = null
     ) : FeatureFailure()
+
+    class InsertCurrencyRateRepositoryError(
+        @StringRes val message: Int = R.string.error_repository_insert_currency_rate,
+        val cause: Throwable? = null
+    ) : FeatureFailure()
+
+    class DeleteCurrencyRateRepositoryError(
+        @StringRes val message: Int = R.string.error_repository_delete_currency_rate,
+        val cause: Throwable? = null
+    ) : FeatureFailure()
 }
