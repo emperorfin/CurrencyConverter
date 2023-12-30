@@ -35,9 +35,9 @@ class CurrencyConverterRepository(
         countRemotely: Boolean
     ): ResultData<Int> = withContext(ioDispatcher) {
         if (countRemotely) {
-            currencyConverterRemoteDataSource.countAllCurrencyRates(params = params)
+            return@withContext currencyConverterRemoteDataSource.countAllCurrencyRates(params = params)
         } else {
-            currencyConverterLocalDataSource.countAllCurrencyRates(params = params)
+            return@withContext currencyConverterLocalDataSource.countAllCurrencyRates(params = params)
         }
     }
 
@@ -45,10 +45,13 @@ class CurrencyConverterRepository(
         params: Params,
         countRemotely: Boolean
     ): ResultData<Int> = withContext(ioDispatcher) {
+
+        println("countRemotely: $countRemotely")
+
         if (countRemotely) {
-            currencyConverterRemoteDataSource.countCurrencyRates(params = params)
+            return@withContext currencyConverterRemoteDataSource.countCurrencyRates(params = params)
         } else {
-            currencyConverterLocalDataSource.countCurrencyRates(params = params)
+            return@withContext currencyConverterLocalDataSource.countCurrencyRates(params = params)
         }
     }
 
@@ -56,13 +59,21 @@ class CurrencyConverterRepository(
         params: Params,
         forceUpdate: Boolean
     ): ResultData<List<CurrencyConverterModel>> = withContext(ioDispatcher) {
+        println("getCurrencyRates() 1")
+
         // Respond immediately with cache if available and not dirty
         if (!forceUpdate) {
+            println("getCurrencyRates() 2")
+
             cachedCurrencyRates?.let {
+                println("getCurrencyRates() 3")
+
 //                return@withContext Success(cachedCurrencyRates.values.sortedBy { it.currencySymbolOther })
                 val cachedCurrencyRates: MutableCollection<List<CurrencyConverterModel>> = it.values
 
                 if (cachedCurrencyRates.isNotEmpty()) {
+                    println("getCurrencyRates() 4")
+
                     return@withContext Success(cachedCurrencyRates.first())
                 }
             }
@@ -71,24 +82,34 @@ class CurrencyConverterRepository(
         val newCurrencyRates: ResultData<List<CurrencyConverterModel>> =
             fetchCurrencyRatesFromRemoteOrLocal(params = params, forceUpdate = forceUpdate)
 
+        println("newCurrencyRates: $newCurrencyRates")
+
         // Refresh the cache with the new currencyRates
-        (newCurrencyRates as? Success)?.let { refreshCache(it.data) }
+        (newCurrencyRates as? Success)?.let { println("getCurrencyRates() 5"); refreshCache(it.data) }
 
         cachedCurrencyRates?.values?.let {
+            println("getCurrencyRates() 6")
+
 //            return@withContext Success(currencyRates.sortedBy { it.currencySymbolOther })
             val currencyRates: MutableCollection<List<CurrencyConverterModel>> = it
 
             if (currencyRates.isNotEmpty()) {
+                println("getCurrencyRates() 7")
+
                 return@withContext Success(currencyRates.first())
             }
         }
 
         (newCurrencyRates as? Success)?.let {
+            println("getCurrencyRates() 8")
+
 //            if (it.data.isEmpty()) {
 //                return@withContext Success(it.data)
 //            }
             return@withContext it
         }
+
+        println("getCurrencyRates() 9")
 
         return@withContext newCurrencyRates as Error
     }

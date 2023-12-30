@@ -50,15 +50,15 @@ class CurrencyConverterLocalDataSourceRoom internal constructor(
                     val numOfAllCurrencyRates: Int = currencyRateDao.countAllCurrencyRates()
 
                     if (numOfAllCurrencyRates > NUM_OF_CURRENCY_RATES_0) {
-                        Success(data = numOfAllCurrencyRates)
+                        return@withContext Success(data = numOfAllCurrencyRates)
                     } else if (numOfAllCurrencyRates == NUM_OF_CURRENCY_RATES_0) {
-                        Error(failure = NonExistentCurrencyRateDataLocalError())
+                        return@withContext Error(failure = NonExistentCurrencyRateDataLocalError())
                     }
 
-                    Error(failure = CurrencyRateLocalError())
+                    return@withContext Error(failure = CurrencyRateLocalError())
 
                 } catch (e: Exception){
-                    Error(failure = CurrencyRateLocalError(cause = e))
+                    return@withContext Error(failure = CurrencyRateLocalError(cause = e))
                 }
             }
             is CurrencyConverterParams -> {
@@ -84,16 +84,18 @@ class CurrencyConverterLocalDataSourceRoom internal constructor(
 
                     val numOfCurrencyRates: Int = currencyRateDao.countCurrencyRates(params.currencySymbolBase!!)
 
+                    println("numOfCurrencyRates: $numOfCurrencyRates")
+
                     if (numOfCurrencyRates > NUM_OF_CURRENCY_RATES_0) {
-                        Success(data = numOfCurrencyRates)
+                        return@withContext Success(data = numOfCurrencyRates)
                     } else if (numOfCurrencyRates == NUM_OF_CURRENCY_RATES_0) {
-                        Error(failure = NonExistentCurrencyRateDataLocalError())
+                        return@withContext Error(failure = NonExistentCurrencyRateDataLocalError())
                     }
 
-                    Error(failure = CurrencyRateLocalError())
+                    return@withContext Error(failure = CurrencyRateLocalError())
 
                 } catch (e: Exception){
-                    Error(failure = CurrencyRateLocalError(cause = e))
+                    return@withContext Error(failure = CurrencyRateLocalError(cause = e))
                 }
             }
             else -> throw NotImplementedError(context.getString(R.string.error_not_yet_implemented))
@@ -116,20 +118,18 @@ class CurrencyConverterLocalDataSourceRoom internal constructor(
                         currencyRateDao.getCurrencyRates(params.currencySymbolBase!!)
 
                     if (currencyRatesEntity == null) // Deliberate check but shouldn't do this
-                        Error(failure = CurrencyRateLocalError())
+                        return@withContext Error(failure = CurrencyRateLocalError())
                     else if (currencyRatesEntity.isEmpty())
-                        Error(
-                            failure = CurrencyRateListNotAvailableLocalError()
-                        )
+                        return@withContext Error(failure = CurrencyRateListNotAvailableLocalError())
 
                     val currencyRatesModel = currencyRatesEntity.map {
                         currencyConverterModelMapper.transform(it)
                     }
 
-                    Success(currencyRatesModel)
+                    return@withContext Success(currencyRatesModel)
 
                 } catch (e: Exception){
-                    Error(failure = CurrencyRateLocalError(cause = e))
+                    return@withContext Error(failure = CurrencyRateLocalError(cause = e))
                 }
             }
             else -> throw NotImplementedError(context.getString(R.string.error_not_yet_implemented))
@@ -184,15 +184,15 @@ class CurrencyConverterLocalDataSourceRoom internal constructor(
                     val numOfCurrencyRatesDeleted: Int = currencyRateDao.deleteCurrencyRates(params.currencySymbolBase!!)
 
                     if (numOfCurrencyRatesDeleted > NUM_OF_CURRENCY_RATES_0 && numOfCurrencyRatesDeleted != numOfCurrencyRates) {
-                        Error(failure = DeleteCurrencyRateLocalError(R.string.error_deleting_currency_rates))
-                    } else {
-                        Error(failure = DeleteCurrencyRateLocalError())
-                    }
+                        return@withContext Error(failure = DeleteCurrencyRateLocalError(R.string.error_deleting_currency_rates))
+                    } /*else {
+                        return@withContext Error(failure = DeleteCurrencyRateLocalError())
+                    }*/
 
                     return@withContext Success(numOfCurrencyRatesDeleted)
 
                 } catch (e: Exception){
-                    Error(failure = DeleteCurrencyRateLocalError(cause = e))
+                    return@withContext Error(failure = DeleteCurrencyRateLocalError(cause = e))
                 }
             }
             else -> throw NotImplementedError(context.getString(R.string.error_not_yet_implemented))

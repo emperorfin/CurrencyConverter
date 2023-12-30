@@ -6,15 +6,20 @@ import androidx.activity.ComponentActivity
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Modifier
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.viewmodel.compose.viewModel
 //import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import emperorfin.android.currencyconverter.R
@@ -23,6 +28,9 @@ import emperorfin.android.currencyconverter.ui.screens.currencyconversion.stateh
 import emperorfin.android.currencyconverter.ui.screens.currencyconversion.uicomponents.Content
 import emperorfin.android.currencyconverter.ui.theme.CurrencyConverterTheme
 import emperorfin.android.currencyconverter.ui.utils.CurrencyConversionTopAppBar
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.withContext
 
 
 /*
@@ -40,8 +48,10 @@ fun CurrencyConversionScreen(
     viewModel: CurrencyConversionViewModel = viewModel(factory = CurrencyConversionViewModelFactory(
         application = context.applicationContext as Application,
         currencyConverterRepository = CurrencyConversionViewModel.getCurrencyConverterRepository(context.applicationContext as Application)
-    )),
+    ))
 ) {
+
+    val snackbarHostState = remember { SnackbarHostState() }
 
     val uiState by viewModel.uiState.collectAsState()
 
@@ -50,6 +60,7 @@ fun CurrencyConversionScreen(
     var baseAmountRefresh by rememberSaveable { mutableStateOf(1)}
 
     Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             CurrencyConversionTopAppBar(
                 openDrawer = openDrawer,
@@ -107,6 +118,15 @@ fun CurrencyConversionScreen(
 
             }
         )
+
+        // Check for snack bar messages to display on the screen
+        uiState.messageSnackBar?.let { message ->
+            val snackbarText = stringResource(message)
+            LaunchedEffect(snackbarHostState, viewModel, message, snackbarText) {
+                snackbarHostState.showSnackbar(message = snackbarText)
+                viewModel.snackbarMessageShown()
+            }
+        }
 
     }
 }

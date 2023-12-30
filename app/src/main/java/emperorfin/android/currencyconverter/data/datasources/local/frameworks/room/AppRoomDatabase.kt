@@ -62,7 +62,7 @@ abstract class AppRoomDatabase : RoomDatabase() {
                                 coroutineScope.launch {
                                     // This is now commented out since real data is being cached
                                     // to the database.
-                                    populateInitialCurrencyRatesSampleDataUsingSqliteDatabaseWithCoroutineThread(db, CurrencyConverterSampleDataGeneratorUtil.getCurrencyConverterEntityList())
+//                                    populateInitialCurrencyRatesSampleDataUsingSqliteDatabaseWithCoroutineThread(db, CurrencyConverterSampleDataGeneratorUtil.getCurrencyConverterEntityList())
                                 }
                             }
 

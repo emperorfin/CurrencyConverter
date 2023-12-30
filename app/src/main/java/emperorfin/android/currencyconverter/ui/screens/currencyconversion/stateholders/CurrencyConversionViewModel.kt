@@ -2,6 +2,7 @@ package emperorfin.android.currencyconverter.ui.screens.currencyconversion.state
 
 import android.app.Application
 import android.content.Context
+import android.widget.Toast
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import emperorfin.android.currencyconverter.R
@@ -20,15 +21,20 @@ import emperorfin.android.currencyconverter.domain.uilayer.events.outputs.succee
 import emperorfin.android.currencyconverter.ui.screens.events.inputs.currencyconverter.CurrencyConverterParams
 import emperorfin.android.currencyconverter.ui.utils.CurrencyConverterSampleDataGeneratorUtil
 import emperorfin.android.currencyconverter.ui.utils.Helpers
+import emperorfin.android.currencyconverter.ui.utils.InternetConnectivityUtil.hasInternetConnection
 import emperorfin.android.currencyconverter.ui.utils.WhileUiSubscribed
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import kotlin.concurrent.thread
 import kotlin.math.roundToInt
+import kotlin.properties.Delegates
 
 
 /*
@@ -256,14 +262,17 @@ class CurrencyConversionViewModel(
     private val _currencyRatesWithFlags: MutableStateFlow<ResultData<List<CurrencyConverterUiModel>>> =  MutableStateFlow(ResultData.Loading)
     private val currencyRatesWithFlags: StateFlow<ResultData<List<CurrencyConverterUiModel>>> = _currencyRatesWithFlags
 
+    private val _messageSnackBar: MutableStateFlow<Int?> = MutableStateFlow(null)
+    private val messageSnackBar: StateFlow<Int?> = _messageSnackBar
+
     init {
 
         // Option 1
 //        simulateLoadingCurrencyRatesErrorOnAppStartup()
         // Option 2
-        simulateNoCurrencyRatesOnAppStartup()
+//        simulateNoCurrencyRatesOnAppStartup()
         // Option 3
-//        initCurrencyRates(context = applicationContext)
+        initCurrencyRates(context = applicationContext)
 
     }
 
@@ -293,6 +302,8 @@ class CurrencyConversionViewModel(
         _currencyRatesWithFlags.value = ResultData.Loading
 
         val currencyRatesWithFlagsNew = mutableListOf<CurrencyConverterUiModel>()
+
+        println("convert() 1")
 
         currencyRatesWithFlags.forEach {
 
@@ -334,14 +345,20 @@ class CurrencyConversionViewModel(
 
         initCurrencyRates = false
 
+        println("convert() 2")
+
         _currencyRatesWithFlags.value = ResultData.Success(data = currencyRatesWithFlagsNew)
+
+        println("convert() 3")
 
     }
 
     fun initCurrencyRates(
         context: Context = applicationContext,
         params: CurrencyConverterParams = CurrencyConverterParams(currencySymbolBase = CURRENCY_SYMBOL_USD),
-        isRefresh: Boolean = false
+        isRefresh: Boolean = false,
+        wouldReconvertRates: Boolean = false,
+        onConvertRates: (() -> Unit)? = null
     ) {
 
         // Option 1
@@ -355,7 +372,14 @@ class CurrencyConversionViewModel(
         // Option 5
 //        getCurrencyRatesRealDataViaRemoteDataSource(params = params, isRefresh = isRefresh)
         // Option 6
-        getDatabaseCurrencyRatesSampleDataViaRepository(params = params, isRefresh = isRefresh)
+//        getDatabaseCurrencyRatesSampleDataViaRepository(params = params, isRefresh = isRefresh)
+        // Option 7
+        loadCurrencyRates(
+            params = params,
+            isRefresh = isRefresh,
+            wouldReconvertRates = wouldReconvertRates,
+            onConvertRates = onConvertRates
+        )
 
     }
 
@@ -374,14 +398,25 @@ class CurrencyConversionViewModel(
 
         val params = CurrencyConverterParams(currencySymbolBase = baseCurrencySymbol)
 
-        initCurrencyRates(context = context, params = params, isRefresh = true)
+        println("refreshCurrencyRates() 1")
 
-        convert(baseAmount = baseAmount, baseCurrencySymbol = baseCurrencySymbol)
+        initCurrencyRates(
+            context = context,
+            params = params,
+            isRefresh = true,
+            wouldReconvertRates = true,
+            onConvertRates = {
+                convert(baseAmount = baseAmount, baseCurrencySymbol = baseCurrencySymbol)
+            }
+        )
+
+//        convert(baseAmount = baseAmount, baseCurrencySymbol = baseCurrencySymbol)
+
     }
 
     val uiState: StateFlow<CurrencyConversionUiState> = combine(
-        _isLoading, _errorMessage, currencyRatesWithFlags
-    ) { isLoading, errorMessage, currencyRatesWithFlags ->
+        _isLoading, _errorMessage, currencyRatesWithFlags, messageSnackBar
+    ) { isLoading, errorMessage, currencyRatesWithFlags, messageSnackBar ->
         when (currencyRatesWithFlags) {
             ResultData.Loading -> {
                 CurrencyConversionUiState(isLoading = true)
@@ -389,6 +424,7 @@ class CurrencyConversionViewModel(
             is ResultData.Error -> {
                 CurrencyConversionUiState(
                     errorMessage = (currencyRatesWithFlags.failure as CurrencyConverterFailure).message,
+                    messageSnackBar = messageSnackBar,
                     initRates = initCurrencyRates
                 )
             }
@@ -418,7 +454,8 @@ class CurrencyConversionViewModel(
                     items = currencyRatesWithFlagsSorted,
                     mapOfCurrencySymbolsToFlag = mapOfCurrencySymbolsToFlagSorted,
                     isLoading = isLoading,
-                    errorMessage = errorMessage
+                    errorMessage = errorMessage,
+                    messageSnackBar = messageSnackBar
                 )
             }
         }
@@ -431,6 +468,10 @@ class CurrencyConversionViewModel(
 
     private fun roundToThreeDecimalPlaces(rateValue: Double): Double {
         return (rateValue * 1000.0).roundToInt() / 1000.0
+    }
+
+    fun snackbarMessageShown() {
+        _messageSnackBar.value = null
     }
 
     private fun simulateLoadingCurrencyRatesErrorOnAppStartup() = viewModelScope.launch(context = coroutineDispatcherDefault) {
@@ -454,7 +495,9 @@ class CurrencyConversionViewModel(
     }
 
     private fun getInMemoryCurrencyRates(
-        context: Context, isRefresh: Boolean
+        context: Context,
+        wouldReconvertRates: Boolean,
+        onConvertRates: (() -> Unit)? = null
     ) = viewModelScope.launch(context = coroutineDispatcherDefault) {
         _currencyRatesWithFlags.value = ResultData.Loading
 
@@ -483,14 +526,25 @@ class CurrencyConversionViewModel(
         currencyRatesWithFlagsDefault = currencyRates
 
 //        _currencyRatesWithFlags.value = ResultData.Success(data = currencyRates)
-        if (!isRefresh) {
+        if (!wouldReconvertRates) {
             _currencyRatesWithFlags.value = ResultData.Success(data = currencyRates)
+        } else {
+
+            if (onConvertRates == null) {
+                throw IllegalArgumentException(
+                    "When the parameter wouldReconvertRates is true, the parameter onConvertRates " +
+                            "must not be null."
+                )
+            }
+
+            onConvertRates.invoke()
         }
 
     }
 
     private fun generateCurrencyRatesSampleData(
-        isRefresh: Boolean
+        wouldReconvertRates: Boolean,
+        onConvertRates: (() -> Unit)? = null
     ) = viewModelScope.launch(context = coroutineDispatcherDefault) {
 
         _currencyRatesWithFlags.value = ResultData.Loading
@@ -506,13 +560,25 @@ class CurrencyConversionViewModel(
         currencyRatesWithFlagsDefault = currencyConverterList
 
 //        _currencyRatesWithFlags.value = ResultData.Success(data = currencyConverterList)
-        if (!isRefresh) {
+        if (!wouldReconvertRates) {
             _currencyRatesWithFlags.value = ResultData.Success(data = currencyConverterList)
+        } else {
+
+            if (onConvertRates == null) {
+                throw IllegalArgumentException(
+                    "When the parameter wouldReconvertRates is true, the parameter onConvertRates " +
+                            "must not be null."
+                )
+            }
+
+            onConvertRates.invoke()
         }
+
     }
 
     private fun getDatabaseCurrencyRatesSampleDataWithoutLocalDataSource(
-        isRefresh: Boolean
+        wouldReconvertRates: Boolean,
+        onConvertRates: (() -> Unit)? = null
     ) = viewModelScope.launch(context = coroutineDispatcherIo) {
 
         _currencyRatesWithFlags.value = ResultData.Loading
@@ -536,14 +602,26 @@ class CurrencyConversionViewModel(
         currencyRatesWithFlagsDefault = currencyRatesUiModel
 
 //        _currencyRatesWithFlags.value = ResultData.Success(data = currencyRatesUiModel)
-        if (!isRefresh) {
+        if (!wouldReconvertRates) {
             _currencyRatesWithFlags.value = ResultData.Success(data = currencyRatesUiModel)
+        } else {
+
+            if (onConvertRates == null) {
+                throw IllegalArgumentException(
+                    "When the parameter wouldReconvertRates is true, the parameter onConvertRates " +
+                            "must not be null."
+                )
+            }
+
+            onConvertRates.invoke()
         }
 
     }
 
     private fun getDatabaseCurrencyRatesSampleDataViaLocalDataSource(
-        params: CurrencyConverterParams, isRefresh: Boolean
+        params: CurrencyConverterParams,
+        wouldReconvertRates: Boolean,
+        onConvertRates: (() -> Unit)? = null
     ) = viewModelScope.launch(context = coroutineDispatcherIo) {
 
         println("getDatabaseCurrencyRatesSampleDataViaLocalDataSource")
@@ -574,8 +652,18 @@ class CurrencyConversionViewModel(
             currencyRatesWithFlagsDefault = currencyRatesUiModel
 
 //        _currencyRatesWithFlags.value = ResultData.Success(data = currencyRatesUiModel)
-            if (!isRefresh) {
+            if (!wouldReconvertRates) {
                 _currencyRatesWithFlags.value = ResultData.Success(data = currencyRatesUiModel)
+            } else {
+
+                if (onConvertRates == null) {
+                    throw IllegalArgumentException(
+                        "When the parameter wouldReconvertRates is true, the parameter onConvertRates " +
+                                "must not be null."
+                    )
+                }
+
+                onConvertRates.invoke()
             }
         } else {
             val error: ResultData.Error = (currencyRatesResultData as ResultData.Error)
@@ -585,7 +673,9 @@ class CurrencyConversionViewModel(
     }
 
     private fun getCurrencyRatesRealDataViaRemoteDataSource(
-        params: CurrencyConverterParams, isRefresh: Boolean
+        params: CurrencyConverterParams,
+        wouldReconvertRates: Boolean,
+        onConvertRates: (() -> Unit)? = null
     ) = viewModelScope.launch(context = coroutineDispatcherIo) {
 
         _currencyRatesWithFlags.value = ResultData.Loading
@@ -613,8 +703,18 @@ class CurrencyConversionViewModel(
             currencyRatesWithFlagsDefault = currencyRatesUiModel
 
 //        _currencyRatesWithFlags.value = ResultData.Success(data = currencyRatesUiModel)
-            if (!isRefresh) {
+            if (!wouldReconvertRates) {
                 _currencyRatesWithFlags.value = ResultData.Success(data = currencyRatesUiModel)
+            } else {
+
+                if (onConvertRates == null) {
+                    throw IllegalArgumentException(
+                        "When the parameter wouldReconvertRates is true, the parameter onConvertRates " +
+                                "must not be null."
+                    )
+                }
+
+                onConvertRates.invoke()
             }
         } else {
             val error: ResultData.Error = (currencyRatesResultData as ResultData.Error)
@@ -624,7 +724,10 @@ class CurrencyConversionViewModel(
     }
 
     private fun getDatabaseCurrencyRatesSampleDataViaRepository(
-        params: CurrencyConverterParams, isRefresh: Boolean
+        params: CurrencyConverterParams,
+        isRefresh: Boolean,
+        wouldReconvertRates: Boolean,
+        onConvertRates: (() -> Unit)? = null
     ) = viewModelScope.launch(context = coroutineDispatcherIo) {
 
         println("getDatabaseCurrencyRatesSampleDataViaRepository")
@@ -653,14 +756,122 @@ class CurrencyConversionViewModel(
             currencyRatesWithFlagsDefault = currencyRatesUiModel
 
 //        _currencyRatesWithFlags.value = ResultData.Success(data = currencyRatesUiModel)
-            if (!isRefresh) {
+            if (!wouldReconvertRates) {
                 _currencyRatesWithFlags.value = ResultData.Success(data = currencyRatesUiModel)
+            } else {
+
+                if (onConvertRates == null) {
+                    throw IllegalArgumentException(
+                        "When the parameter wouldReconvertRates is true, the parameter onConvertRates " +
+                                "must not be null."
+                    )
+                }
+
+                onConvertRates.invoke()
             }
         } else {
             val error: ResultData.Error = (currencyRatesResultData as ResultData.Error)
             _currencyRatesWithFlags.value = error
         }
 
+    }
+
+    private fun loadCurrencyRates(
+        params: CurrencyConverterParams, isRefresh: Boolean, wouldReconvertRates: Boolean, onConvertRates: (() -> Unit)? = null
+    ){
+        viewModelScope.launch/*(context = coroutineDispatcherIo)*/ {
+
+            var currencyRatesCount by Delegates.notNull<Int>()
+
+            val currencyRatesCountDataResultEvent = currencyConverterRepository.countCurrencyRates(params = params)
+
+            currencyRatesCount = if (currencyRatesCountDataResultEvent.succeeded)
+                (currencyRatesCountDataResultEvent as ResultData.Success).data
+            else
+                -1
+
+            println("currencyRatesCount: $currencyRatesCount")
+
+            if (currencyRatesCount > 0 || isRefresh){
+                println("loadCurrencyRates() 1")
+
+                if (hasInternetConnection(applicationContext)){
+                    println("loadCurrencyRates() 2")
+
+                    getCurrencyRatesViaRepository(
+                        params = params,
+                        isRefresh = true,
+                        wouldReconvertRates = wouldReconvertRates,
+                        onConvertRates = onConvertRates
+                    )
+                } else {
+                    println("loadCurrencyRates() 3")
+
+                    withContext(Dispatchers.Main){
+                        Toast.makeText(
+                            applicationContext,
+                            R.string.message_no_internet_loading_cached_currency_rates,
+                            Toast.LENGTH_LONG
+                        ).show()
+                    }
+
+                    getCurrencyRatesViaRepository(
+                        params = params,
+                        isRefresh = false,
+                        wouldReconvertRates = wouldReconvertRates,
+                        onConvertRates = onConvertRates
+                    )
+                }
+            } else {
+                println("loadCurrencyRates() 4")
+
+                if (hasInternetConnection(applicationContext)){
+                    getCurrencyRatesViaRepository(
+                        params = params,
+                        isRefresh = true,
+                        wouldReconvertRates = wouldReconvertRates,
+                        onConvertRates = onConvertRates
+                    )
+                } else {
+                    println("loadCurrencyRates() 5")
+
+                    _messageSnackBar.value = R.string.message_no_internet_connectivity
+
+                    _currencyRatesWithFlags.value = ResultData.Error(
+                        failure = CurrencyConverterFailure.CurrencyRateRemoteError(
+                            message = R.string.message_no_internet_connectivity
+                        )
+                    )
+                }
+            }
+
+        }
+    }
+
+    private fun getCurrencyRatesViaRepository(
+        params: CurrencyConverterParams,
+        isRefresh: Boolean,
+        wouldReconvertRates: Boolean,
+        onConvertRates: (() -> Unit)? = null
+    ){
+        getDatabaseCurrencyRatesSampleDataViaRepository(
+            params = params,
+            isRefresh = isRefresh,
+            wouldReconvertRates = wouldReconvertRates,
+            onConvertRates = onConvertRates
+        )
+    }
+
+    private fun getSavedCurrencyRates(
+        params: CurrencyConverterParams,
+        wouldReconvertRates: Boolean,
+        onConvertRates: (() -> Unit)? = null
+    ){
+        getDatabaseCurrencyRatesSampleDataViaLocalDataSource(
+            params = params,
+            wouldReconvertRates = wouldReconvertRates,
+            onConvertRates = onConvertRates
+        )
     }
 
 }

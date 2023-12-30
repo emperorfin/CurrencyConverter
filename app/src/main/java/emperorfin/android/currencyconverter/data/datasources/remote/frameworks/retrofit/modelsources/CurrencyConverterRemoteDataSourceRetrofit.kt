@@ -73,7 +73,7 @@ class CurrencyConverterRemoteDataSourceRetrofit internal constructor(
                     }
 
                 } catch (e: Exception){
-                    Error(failure = CurrencyConverterFailure.CurrencyRateRemoteError(cause = e))
+                    return@withContext Error(failure = CurrencyConverterFailure.CurrencyRateRemoteError(cause = e))
                 }
             }
             else -> throw NotImplementedError(context.getString(R.string.error_not_yet_implemented))
