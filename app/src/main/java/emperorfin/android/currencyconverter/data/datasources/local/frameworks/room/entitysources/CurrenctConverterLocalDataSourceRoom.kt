@@ -2,9 +2,12 @@ package emperorfin.android.currencyconverter.data.datasources.local.frameworks.r
 
 import android.content.Context
 import emperorfin.android.currencyconverter.R
+import emperorfin.android.currencyconverter.data.constants.StringConstants.ERROR_MESSAGE_INAPPROPRIATE_ARGUMENT_PASSED
+import emperorfin.android.currencyconverter.data.constants.StringConstants.ERROR_MESSAGE_NOT_YET_IMPLEMENTED
 import emperorfin.android.currencyconverter.data.datasources.local.frameworks.room.dao.CurrencyRateDao
 import emperorfin.android.currencyconverter.data.datasources.local.frameworks.room.entities.currencyconverter.CurrencyConverterEntity
 import emperorfin.android.currencyconverter.data.datasources.local.frameworks.room.entities.currencyconverter.CurrencyConverterEntityMapper
+import emperorfin.android.currencyconverter.domain.datalayer.dao.CurrencyRatesDao
 import emperorfin.android.currencyconverter.domain.datalayer.datasources.CurrencyConverterDataSource
 import emperorfin.android.currencyconverter.domain.exceptions.CurrencyConverterFailure.CurrencyRateLocalError
 import emperorfin.android.currencyconverter.domain.exceptions.CurrencyConverterFailure.NonExistentCurrencyRateDataLocalError
@@ -30,9 +33,10 @@ import kotlinx.coroutines.withContext
  */
 
 
-class CurrencyConverterLocalDataSourceRoom internal constructor(
-    private val context: Context,
-    private val currencyRateDao: CurrencyRateDao,
+data class CurrencyConverterLocalDataSourceRoom internal constructor(
+//    private val context: Context,
+//    private val currencyRateDao: CurrencyRateDao,
+    private val currencyRateDao: CurrencyRatesDao,
     private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
     private val currencyConverterEntityMapper: CurrencyConverterEntityMapper = CurrencyConverterEntityMapper(),
     private val currencyConverterModelMapper: CurrencyConverterModelMapper = CurrencyConverterModelMapper()
@@ -62,11 +66,11 @@ class CurrencyConverterLocalDataSourceRoom internal constructor(
                 }
             }
             is CurrencyConverterParams -> {
-                throw IllegalArgumentException(
-                    context.getString(R.string.error_inappropriate_argument_passed)
-                )
+//                throw IllegalArgumentException(context.getString(R.string.error_inappropriate_argument_passed))
+                throw IllegalArgumentException(ERROR_MESSAGE_INAPPROPRIATE_ARGUMENT_PASSED)
             }
-            else -> throw NotImplementedError(context.getString(R.string.error_not_yet_implemented))
+//            else -> throw NotImplementedError(context.getString(R.string.error_not_yet_implemented))
+            else -> throw NotImplementedError(ERROR_MESSAGE_NOT_YET_IMPLEMENTED)
         }
 
 
@@ -75,9 +79,8 @@ class CurrencyConverterLocalDataSourceRoom internal constructor(
     override suspend fun countCurrencyRates(params: Params): ResultData<Int> = withContext(ioDispatcher) {
         when(params){
             is None -> {
-                throw IllegalArgumentException(
-                    context.getString(R.string.error_inappropriate_argument_passed)
-                )
+//                throw IllegalArgumentException(context.getString(R.string.error_inappropriate_argument_passed))
+                throw IllegalArgumentException(ERROR_MESSAGE_INAPPROPRIATE_ARGUMENT_PASSED)
             }
             is CurrencyConverterParams -> {
                 return@withContext try {
@@ -98,7 +101,8 @@ class CurrencyConverterLocalDataSourceRoom internal constructor(
                     return@withContext Error(failure = CurrencyRateLocalError(cause = e))
                 }
             }
-            else -> throw NotImplementedError(context.getString(R.string.error_not_yet_implemented))
+//            else -> throw NotImplementedError(context.getString(R.string.error_not_yet_implemented))
+            else -> throw NotImplementedError(ERROR_MESSAGE_NOT_YET_IMPLEMENTED)
         }
     }
 
@@ -108,9 +112,8 @@ class CurrencyConverterLocalDataSourceRoom internal constructor(
 
         when(params){
             is None -> {
-                throw IllegalArgumentException(
-                    context.getString(R.string.error_inappropriate_argument_passed)
-                )
+//                throw IllegalArgumentException(context.getString(R.string.error_inappropriate_argument_passed))
+                throw IllegalArgumentException(ERROR_MESSAGE_INAPPROPRIATE_ARGUMENT_PASSED)
             }
             is CurrencyConverterParams -> {
                 return@withContext try {
@@ -132,7 +135,8 @@ class CurrencyConverterLocalDataSourceRoom internal constructor(
                     return@withContext Error(failure = CurrencyRateLocalError(cause = e))
                 }
             }
-            else -> throw NotImplementedError(context.getString(R.string.error_not_yet_implemented))
+//            else -> throw NotImplementedError(context.getString(R.string.error_not_yet_implemented))
+            else -> throw NotImplementedError(ERROR_MESSAGE_NOT_YET_IMPLEMENTED)
         }
     }
 
@@ -149,6 +153,7 @@ class CurrencyConverterLocalDataSourceRoom internal constructor(
             currencyConverterEntityMapper.transform(it)
         }
 
+        // TODO: Consider putting this in a try/catch block and then write test cases for it.
         val tableRowIds: List<Long> = currencyRateDao.insertCurrencyRates(currencyRatesEntity)
 
         if (tableRowIds.size != currencyRatesEntity.size)
@@ -162,9 +167,8 @@ class CurrencyConverterLocalDataSourceRoom internal constructor(
     override suspend fun deleteCurrencyRates(params: Params): ResultData<Int> = withContext(ioDispatcher) {
         when(params){
             is None -> {
-                throw IllegalArgumentException(
-                    context.getString(R.string.error_inappropriate_argument_passed)
-                )
+//                throw IllegalArgumentException(context.getString(R.string.error_inappropriate_argument_passed))
+                throw IllegalArgumentException(ERROR_MESSAGE_INAPPROPRIATE_ARGUMENT_PASSED)
             }
             is CurrencyConverterParams -> {
                 return@withContext try {
@@ -195,7 +199,8 @@ class CurrencyConverterLocalDataSourceRoom internal constructor(
                     return@withContext Error(failure = DeleteCurrencyRateLocalError(cause = e))
                 }
             }
-            else -> throw NotImplementedError(context.getString(R.string.error_not_yet_implemented))
+//            else -> throw NotImplementedError(context.getString(R.string.error_not_yet_implemented))
+            else -> throw NotImplementedError(ERROR_MESSAGE_NOT_YET_IMPLEMENTED)
         }
     }
 }

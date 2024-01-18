@@ -108,6 +108,11 @@ dependencies {
     // TEST IMPLEMENTATIONS
     testImplementation "junit:junit:$junit"
     testImplementation "androidx.navigation:navigation-testing:$androidx_navigation"
+    testImplementation "androidx.test:core-ktx:$androidx_test_core_ktx"
+    // Testing code should not be included in the main code.
+    // Once https://issuetracker.google.com/128612536 is fixed this can be fixed.
+    implementation "androidx.test:core:$androidx_test_core_ktx"
+    testImplementation "org.jetbrains.kotlinx:kotlinx-coroutines-test:$org_jetbrains_kotlinx_coroutines_test"
 
 
     // ANDROID IMPLEMENTATIONS

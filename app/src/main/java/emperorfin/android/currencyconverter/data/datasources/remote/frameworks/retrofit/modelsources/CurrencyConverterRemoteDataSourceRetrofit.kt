@@ -2,9 +2,10 @@ package emperorfin.android.currencyconverter.data.datasources.remote.frameworks.
 
 import android.content.Context
 import emperorfin.android.currencyconverter.R
-import emperorfin.android.currencyconverter.data.datasources.local.frameworks.room.entitysources.CurrencyConverterLocalDataSourceRoom
 import emperorfin.android.currencyconverter.data.datasources.remote.frameworks.retrofit.models.currencyconverter.CurrencyConverterDataTransferObject
+import emperorfin.android.currencyconverter.data.datasources.remote.frameworks.retrofit.webservices.openexchangerates.endpoints.api.latest.ResponseWrapper
 import emperorfin.android.currencyconverter.data.datasources.remote.frameworks.retrofit.webservices.openexchangerates.service.OpenExchangeRatesService
+import emperorfin.android.currencyconverter.domain.datalayer.dao.CurrencyRatesDao
 import emperorfin.android.currencyconverter.domain.datalayer.datasources.CurrencyConverterDataSource
 import emperorfin.android.currencyconverter.domain.exceptions.CurrencyConverterFailure
 import emperorfin.android.currencyconverter.domain.models.currencyconverter.CurrencyConverterModel
@@ -18,6 +19,7 @@ import emperorfin.android.currencyconverter.ui.screens.events.inputs.currencycon
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import retrofit2.Response
 
 
 /*
@@ -28,6 +30,7 @@ import kotlinx.coroutines.withContext
 
 class CurrencyConverterRemoteDataSourceRetrofit internal constructor(
     private val context: Context,
+    private val currencyRatesDao: CurrencyRatesDao = OpenExchangeRatesService.INSTANCE,
     private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
     private val currencyConverterModelMapper: CurrencyConverterModelMapper = CurrencyConverterModelMapper()
 ) : CurrencyConverterDataSource {
@@ -52,7 +55,16 @@ class CurrencyConverterRemoteDataSourceRetrofit internal constructor(
 
                 return@withContext try {
 
-                    val response = OpenExchangeRatesService.INSTANCE.getCurrencyRates(base = params.currencySymbolBase!!)
+//                    val response = OpenExchangeRatesService
+//                        .INSTANCE
+//                        .getCurrencyRates(
+//                            currencySymbolBase = params.currencySymbolBase!!,
+//                            arg1 = OpenExchangeRatesService.APP_ID
+//                        )
+                    val response = currencyRatesDao.getCurrencyRates(
+                            currencySymbolBase = params.currencySymbolBase!!,
+                            appId = OpenExchangeRatesService.APP_ID
+                    ) as Response<ResponseWrapper>
 
                     withContext(Dispatchers.Main){
                         if (response.isSuccessful){

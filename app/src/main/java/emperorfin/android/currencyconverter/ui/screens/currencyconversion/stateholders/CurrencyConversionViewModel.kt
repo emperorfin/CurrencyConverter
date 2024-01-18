@@ -58,7 +58,8 @@ class CurrencyConversionViewModel(
             val currencyRateDao = AppRoomDatabase.getInstance(application).mCurrencyRateDao
 
             val currencyRatesLocalDataSource =
-                CurrencyConverterLocalDataSourceRoom(context = application, currencyRateDao = currencyRateDao)
+//                CurrencyConverterLocalDataSourceRoom(context = application, currencyRateDao = currencyRateDao)
+                CurrencyConverterLocalDataSourceRoom(currencyRateDao = currencyRateDao)
 
             val currencyRatesRemoteDataSource =
                 CurrencyConverterRemoteDataSourceRetrofit(context = application)
@@ -628,8 +629,11 @@ class CurrencyConversionViewModel(
 
         _currencyRatesWithFlags.value = ResultData.Loading
 
+//        val localDataSourceRoom = CurrencyConverterLocalDataSourceRoom(
+//            applicationContext,
+//            AppRoomDatabase.getInstance(applicationContext).mCurrencyRateDao
+//        )
         val localDataSourceRoom = CurrencyConverterLocalDataSourceRoom(
-            applicationContext,
             AppRoomDatabase.getInstance(applicationContext).mCurrencyRateDao
         )
 
