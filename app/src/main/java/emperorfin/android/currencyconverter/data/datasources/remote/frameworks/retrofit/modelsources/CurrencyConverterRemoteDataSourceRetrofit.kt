@@ -2,6 +2,8 @@ package emperorfin.android.currencyconverter.data.datasources.remote.frameworks.
 
 import android.content.Context
 import emperorfin.android.currencyconverter.R
+import emperorfin.android.currencyconverter.data.constants.StringConstants.ERROR_MESSAGE_INAPPROPRIATE_ARGUMENT_PASSED
+import emperorfin.android.currencyconverter.data.constants.StringConstants.ERROR_MESSAGE_NOT_YET_IMPLEMENTED
 import emperorfin.android.currencyconverter.data.datasources.remote.frameworks.retrofit.models.currencyconverter.CurrencyConverterDataTransferObject
 import emperorfin.android.currencyconverter.data.datasources.remote.frameworks.retrofit.webservices.openexchangerates.endpoints.api.latest.ResponseWrapper
 import emperorfin.android.currencyconverter.data.datasources.remote.frameworks.retrofit.webservices.openexchangerates.service.OpenExchangeRatesService
@@ -28,10 +30,11 @@ import retrofit2.Response
  */
 
 
-class CurrencyConverterRemoteDataSourceRetrofit internal constructor(
-    private val context: Context,
+data class CurrencyConverterRemoteDataSourceRetrofit internal constructor(
+//    private val context: Context,
     private val currencyRatesDao: CurrencyRatesDao = OpenExchangeRatesService.INSTANCE,
     private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
+    private val mainDispatcher: CoroutineDispatcher = Dispatchers.Main,
     private val currencyConverterModelMapper: CurrencyConverterModelMapper = CurrencyConverterModelMapper()
 ) : CurrencyConverterDataSource {
     override suspend fun countAllCurrencyRates(params: Params): ResultData<Int> {
@@ -47,9 +50,8 @@ class CurrencyConverterRemoteDataSourceRetrofit internal constructor(
     ): ResultData<List<CurrencyConverterModel>> = withContext(ioDispatcher) {
         when(params){
             is None -> {
-                throw IllegalArgumentException(
-                    context.getString(R.string.error_inappropriate_argument_passed)
-                )
+//                throw IllegalArgumentException(context.getString(R.string.error_inappropriate_argument_passed))
+                throw IllegalArgumentException(ERROR_MESSAGE_INAPPROPRIATE_ARGUMENT_PASSED)
             }
             is CurrencyConverterParams -> {
 
@@ -66,7 +68,7 @@ class CurrencyConverterRemoteDataSourceRetrofit internal constructor(
                             appId = OpenExchangeRatesService.APP_ID
                     ) as Response<ResponseWrapper>
 
-                    withContext(Dispatchers.Main){
+                    withContext(mainDispatcher){
                         if (response.isSuccessful){
 
                             response.body()?.let {
@@ -88,7 +90,8 @@ class CurrencyConverterRemoteDataSourceRetrofit internal constructor(
                     return@withContext Error(failure = CurrencyConverterFailure.CurrencyRateRemoteError(cause = e))
                 }
             }
-            else -> throw NotImplementedError(context.getString(R.string.error_not_yet_implemented))
+//            else -> throw NotImplementedError(context.getString(R.string.error_not_yet_implemented))
+            else -> throw NotImplementedError(ERROR_MESSAGE_NOT_YET_IMPLEMENTED)
         }
     }
 
