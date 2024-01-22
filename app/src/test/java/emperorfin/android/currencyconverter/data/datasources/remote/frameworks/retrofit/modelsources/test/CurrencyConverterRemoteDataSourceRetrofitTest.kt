@@ -11,6 +11,7 @@ import emperorfin.android.currencyconverter.data.constants.StringConstants.ERROR
 import emperorfin.android.currencyconverter.data.constants.StringConstants.ERROR_MESSAGE_NOT_YET_IMPLEMENTED
 import emperorfin.android.currencyconverter.data.datasources.local.frameworks.room.dao.FakeCurrencyRatesDao
 import emperorfin.android.currencyconverter.data.datasources.remote.frameworks.retrofit.modelsources.CurrencyConverterRemoteDataSourceRetrofit
+import emperorfin.android.currencyconverter.data.datasources.remote.frameworks.retrofit.webservices.openexchangerates.service.fake.FakeOpenExchangeRatesService
 import emperorfin.android.currencyconverter.domain.exceptions.CurrencyConverterFailure.GetCurrencyRateRemoteError
 import emperorfin.android.currencyconverter.domain.exceptions.CurrencyConverterFailure.CurrencyRateRemoteError
 import emperorfin.android.currencyconverter.domain.models.currencyconverter.CurrencyConverterModel
@@ -54,7 +55,7 @@ internal class CurrencyConverterRemoteDataSourceRetrofitTest {
 
     }
 
-    private lateinit var currencyRatesDao: FakeCurrencyRatesDao
+    private lateinit var currencyRatesDao: FakeOpenExchangeRatesService
 
     // Class under test
     private lateinit var currencyConverterRemoteDataSourceRetrofit: CurrencyConverterRemoteDataSourceRetrofit
@@ -66,7 +67,7 @@ internal class CurrencyConverterRemoteDataSourceRetrofitTest {
     @Before
     fun createLocalDataSource() {
 
-        currencyRatesDao = FakeCurrencyRatesDao()
+        currencyRatesDao = FakeOpenExchangeRatesService()
 
         currencyConverterRemoteDataSourceRetrofit = CurrencyConverterRemoteDataSourceRetrofit(
             currencyRatesDao = currencyRatesDao,

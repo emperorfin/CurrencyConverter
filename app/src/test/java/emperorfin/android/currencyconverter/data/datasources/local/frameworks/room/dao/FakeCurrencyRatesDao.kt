@@ -21,7 +21,7 @@ import retrofit2.Response
  */
 
 
-data class FakeCurrencyRatesDao(
+internal data class FakeCurrencyRatesDao(
     private val noOfCurrencyRates: Int = NUM_OF_CURRENCY_RATES_150,
     private val noOfCurrencyRatesDeleted: Int = NUM_OF_CURRENCY_RATES_150,
     private val tableRowIds: List<Long> = TABLE_ROW_IDS_TWO,
@@ -36,37 +36,10 @@ data class FakeCurrencyRatesDao(
 
         const val NUM_OF_CURRENCY_RATES_150: Int = 150
 
-        private val CURRENCY_RATES_MAP: Map<String, Double> = mapOf(
-            "AED" to 3.6721,
-            "AFN" to 69.845466
-        )
-
         val TABLE_ROW_IDS_TWO: List<Long> = listOf(1L, 2L)
 
         val CURRENCY_RATES_ENTITY: List<CurrencyConverterEntity> =
             CurrencyConverterEntitySampleDataGeneratorUtil.getCurrencyConverterEntityList()
-
-        fun getSuccessfulRemoteCurrencyRates(): Response<ResponseWrapper> {
-            val responseWrapper = ResponseWrapper(
-                disclaimer = "Usage subject to terms: https://openexchangerates.org/terms",
-                license = "https://openexchangerates.org/license",
-                timestamp = 1701774000,
-                base = "USD",
-                rates = CURRENCY_RATES_MAP
-            )
-
-            val response: Response<ResponseWrapper> = Response.success(responseWrapper)
-
-            return response
-        }
-
-        fun getFailedRemoteCurrencyRates(): Response<ResponseWrapper> {
-            val responseBody: ResponseBody = ResponseBody.create(null, "Error encountered.")
-
-            val response: Response<ResponseWrapper> = Response.error(404, responseBody)
-
-            return response
-        }
     }
 
     override suspend fun countAllCurrencyRates(): Int {
@@ -111,12 +84,7 @@ data class FakeCurrencyRatesDao(
     }
 
     override suspend fun getCurrencyRates(currencySymbolBase: String, appId: String): Any {
-
-        if (isException) throw Exception()
-
-        if (isGetRemoteCurrencyRatesFailed) return getFailedRemoteCurrencyRates()
-
-        return getSuccessfulRemoteCurrencyRates()
+        TODO("Should not be implemented")
     }
 
     override suspend fun insertCurrencyRates(currencyRates: List<CurrencyConverterEntity>): List<Long> {
