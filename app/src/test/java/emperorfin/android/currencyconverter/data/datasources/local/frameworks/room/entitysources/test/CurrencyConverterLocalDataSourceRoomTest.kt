@@ -18,7 +18,7 @@ import emperorfin.android.currencyconverter.data.datasources.local.frameworks.ro
 import emperorfin.android.currencyconverter.data.datasources.local.frameworks.room.dao.FakeCurrencyRatesDao.Companion.TABLE_ROW_IDS_TWO
 import emperorfin.android.currencyconverter.data.datasources.local.frameworks.room.entitysources.CurrencyConverterLocalDataSourceRoom
 import emperorfin.android.currencyconverter.domain.exceptions.CurrencyConverterFailure.DeleteCurrencyRateLocalError
-import emperorfin.android.currencyconverter.domain.exceptions.CurrencyConverterFailure.InsertCurrencyRateLocalrror
+import emperorfin.android.currencyconverter.domain.exceptions.CurrencyConverterFailure.InsertCurrencyRateLocalError
 import emperorfin.android.currencyconverter.domain.exceptions.CurrencyConverterFailure.CurrencyRateListNotAvailableLocalError
 import emperorfin.android.currencyconverter.domain.exceptions.CurrencyConverterFailure.CurrencyRateLocalError
 import emperorfin.android.currencyconverter.domain.exceptions.CurrencyConverterFailure.NonExistentCurrencyRateDataLocalError
@@ -368,6 +368,7 @@ internal class CurrencyConverterLocalDataSourceRoomTest {
 
         val currencyRatesModel: List<CurrencyConverterModel> = listOf(currencyRateModel1, currencyRateModel2)
 
+        // TODO: Rename currencyRatesModelResultData to tableRowIdsResultData
         val currencyRatesModelResultData: ResultData.Success<List<Long>> = currencyConverterLocalDataSourceRoom
             .saveCurrencyRates(currencyRatesModel = currencyRatesModel) as ResultData.Success
 
@@ -390,10 +391,10 @@ internal class CurrencyConverterLocalDataSourceRoomTest {
         val errorResultData: ResultData.Error = currencyConverterLocalDataSourceRoom
             .saveCurrencyRates(currencyRatesModel = currencyRatesModel) as ResultData.Error
 
-        val errorMessageActual: Int = (errorResultData.failure as InsertCurrencyRateLocalrror).message
+        val errorMessageActual: Int = (errorResultData.failure as InsertCurrencyRateLocalError).message
 
         assertThat(errorMessageActual, IsEqual(errorMessageExpected))
-        assertThat(errorResultData.failure, IsInstanceOf(InsertCurrencyRateLocalrror::class.java))
+        assertThat(errorResultData.failure, IsInstanceOf(InsertCurrencyRateLocalError::class.java))
     }
 
     @Test
@@ -434,10 +435,10 @@ internal class CurrencyConverterLocalDataSourceRoomTest {
         val errorResultData: ResultData.Error = currencyConverterLocalDataSourceRoom
             .saveCurrencyRates(currencyRatesModel = currencyRatesModel) as ResultData.Error
 
-        val errorMessageActual: Int = (errorResultData.failure as InsertCurrencyRateLocalrror).message
+        val errorMessageActual: Int = (errorResultData.failure as InsertCurrencyRateLocalError).message
 
         assertThat(errorMessageActual, IsEqual(errorMessageExpected))
-        assertThat(errorResultData.failure, IsInstanceOf(InsertCurrencyRateLocalrror::class.java))
+        assertThat(errorResultData.failure, IsInstanceOf(InsertCurrencyRateLocalError::class.java))
     }
 
     @Test

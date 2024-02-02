@@ -66,7 +66,7 @@ sealed class CurrencyConverterFailure(
         override val cause: Throwable? = null
     ) : CurrencyConverterFailure(message = message, cause = cause)
 
-    class InsertCurrencyRateLocalrror(
+    class InsertCurrencyRateLocalError(
         @StringRes override val message: Int = R.string.error_local_insert_currency_rate,
         override val cause: Throwable? = null
     ) : CurrencyConverterFailure(message = message, cause = cause)

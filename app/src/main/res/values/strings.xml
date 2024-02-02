@@ -20,6 +20,8 @@
     <string name="error_deleting_currency_rates">Error deleting currency rates.</string>
     <string name="error_fetching_from_remote_and_local">Error fetching from remote and local.</string>
     <string name="error_cant_force_refresh_currency_rates_remote_data_source_unavailable">Can\'t force refresh currency rates. Remote data source is unavailable..</string>
+    <string name="exception_occurred_local">Local exception occurred.</string>
+    <string name="exception_occurred_remote">Remote exception occurred.</string>
     <string name="message_no_internet_loading_cached_currency_rates">No internet connectivity. Loading saved currency rates…</string>
     <string name="message_no_internet_connectivity">No internet connectivity.</string>
 

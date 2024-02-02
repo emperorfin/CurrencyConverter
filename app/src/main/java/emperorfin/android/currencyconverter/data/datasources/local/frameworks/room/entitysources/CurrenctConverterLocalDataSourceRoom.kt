@@ -1,10 +1,8 @@
 package emperorfin.android.currencyconverter.data.datasources.local.frameworks.room.entitysources
 
-import android.content.Context
 import emperorfin.android.currencyconverter.R
 import emperorfin.android.currencyconverter.data.constants.StringConstants.ERROR_MESSAGE_INAPPROPRIATE_ARGUMENT_PASSED
 import emperorfin.android.currencyconverter.data.constants.StringConstants.ERROR_MESSAGE_NOT_YET_IMPLEMENTED
-import emperorfin.android.currencyconverter.data.datasources.local.frameworks.room.dao.CurrencyRateDao
 import emperorfin.android.currencyconverter.data.datasources.local.frameworks.room.entities.currencyconverter.CurrencyConverterEntity
 import emperorfin.android.currencyconverter.data.datasources.local.frameworks.room.entities.currencyconverter.CurrencyConverterEntityMapper
 import emperorfin.android.currencyconverter.domain.datalayer.dao.CurrencyRatesDao
@@ -12,7 +10,7 @@ import emperorfin.android.currencyconverter.domain.datalayer.datasources.Currenc
 import emperorfin.android.currencyconverter.domain.exceptions.CurrencyConverterFailure.CurrencyRateLocalError
 import emperorfin.android.currencyconverter.domain.exceptions.CurrencyConverterFailure.NonExistentCurrencyRateDataLocalError
 import emperorfin.android.currencyconverter.domain.exceptions.CurrencyConverterFailure.CurrencyRateListNotAvailableLocalError
-import emperorfin.android.currencyconverter.domain.exceptions.CurrencyConverterFailure.InsertCurrencyRateLocalrror
+import emperorfin.android.currencyconverter.domain.exceptions.CurrencyConverterFailure.InsertCurrencyRateLocalError
 import emperorfin.android.currencyconverter.domain.exceptions.CurrencyConverterFailure.DeleteCurrencyRateLocalError
 import emperorfin.android.currencyconverter.domain.models.currencyconverter.CurrencyConverterModel
 import emperorfin.android.currencyconverter.domain.models.currencyconverter.CurrencyConverterModelMapper
@@ -146,7 +144,7 @@ data class CurrencyConverterLocalDataSourceRoom internal constructor(
 
         if (currencyRatesModel.isEmpty())
             return@withContext Error(
-                failure = InsertCurrencyRateLocalrror(message = R.string.error_cant_save_empty_currency_rate_list)
+                failure = InsertCurrencyRateLocalError(message = R.string.error_cant_save_empty_currency_rate_list)
             )
 
         val currencyRatesEntity = currencyRatesModel.map {
@@ -158,7 +156,7 @@ data class CurrencyConverterLocalDataSourceRoom internal constructor(
 
         if (tableRowIds.size != currencyRatesEntity.size)
             return@withContext Error(
-                InsertCurrencyRateLocalrror(message = R.string.error_all_currency_rates_not_saved)
+                InsertCurrencyRateLocalError(message = R.string.error_all_currency_rates_not_saved)
             )
 
         return@withContext Success(tableRowIds)
@@ -184,6 +182,11 @@ data class CurrencyConverterLocalDataSourceRoom internal constructor(
                     } else {
                         (numOfCurrencyRatesResultData as Success).data
                     }
+
+                    // TODO: Uncomment the following and be sure to add test case.
+//                    if (numOfCurrencyRates == NUM_OF_CURRENCY_RATES_0) {
+//                        return@withContext Error(failure = DeleteCurrencyRateLocalError(R.string.no_currency_rates_to_delete))
+//                    }
 
                     val numOfCurrencyRatesDeleted: Int = currencyRateDao.deleteCurrencyRates(params.currencySymbolBase!!)
 

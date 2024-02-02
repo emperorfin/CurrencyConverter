@@ -22,7 +22,7 @@ import java.util.concurrent.ConcurrentMap
  */
 
 
-class CurrencyConverterRepository(
+data class CurrencyConverterRepository(
     private val currencyConverterLocalDataSource: CurrencyConverterDataSource,
     private val currencyConverterRemoteDataSource: CurrencyConverterDataSource,
     private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO
@@ -116,84 +116,104 @@ class CurrencyConverterRepository(
 
     override suspend fun saveCurrencyRates(
         currencyRatesModel: List<CurrencyConverterModel>,
-        saveRemotely: Boolean?
+//        saveRemotely: Boolean?
+        saveRemotely: Boolean
     ): ResultData<List<Long>> = withContext(ioDispatcher) {
 
-        saveRemotely?.let {saveRemotely ->
-            if (saveRemotely) {
-                return@withContext currencyConverterRemoteDataSource.saveCurrencyRates(currencyRatesModel = currencyRatesModel)
-            } else {
-                return@withContext currencyConverterLocalDataSource.saveCurrencyRates(currencyRatesModel = currencyRatesModel)
-            }
+//        saveRemotely?.let {saveRemotely ->
+//            if (saveRemotely) {
+//                return@withContext currencyConverterRemoteDataSource.saveCurrencyRates(currencyRatesModel = currencyRatesModel)
+//            } else {
+//                return@withContext currencyConverterLocalDataSource.saveCurrencyRates(currencyRatesModel = currencyRatesModel)
+//            }
+//        }
+//
+//        val savedCurrencyRatesResultDataRemote: ResultData<List<Long>> =
+//            currencyConverterRemoteDataSource.saveCurrencyRates(currencyRatesModel = currencyRatesModel)
+//
+//        if (savedCurrencyRatesResultDataRemote is Error) {
+//            return@withContext savedCurrencyRatesResultDataRemote
+//        }
+//
+//        val savedCurrencyRatesResultDataLocal: ResultData<List<Long>> =
+//            currencyConverterLocalDataSource.saveCurrencyRates(currencyRatesModel = currencyRatesModel)
+//
+//        if (savedCurrencyRatesResultDataLocal is Error) {
+//            return@withContext savedCurrencyRatesResultDataLocal
+//        }
+//
+//        if (savedCurrencyRatesResultDataRemote is Success && savedCurrencyRatesResultDataLocal is Success) {
+//            return@withContext Success(savedCurrencyRatesResultDataRemote.data)
+//        }
+//
+//        return@withContext Error(
+//            failure = CurrencyConverterFailure.InsertCurrencyRateRepositoryError()
+//        )
+
+        if (saveRemotely) {
+            return@withContext currencyConverterRemoteDataSource.saveCurrencyRates(currencyRatesModel = currencyRatesModel)
+        } else {
+            return@withContext currencyConverterLocalDataSource.saveCurrencyRates(currencyRatesModel = currencyRatesModel)
         }
-
-        val savedCurrencyRatesResultDataRemote: ResultData<List<Long>> =
-            currencyConverterRemoteDataSource.saveCurrencyRates(currencyRatesModel = currencyRatesModel)
-
-        if (savedCurrencyRatesResultDataRemote is Error) {
-            return@withContext savedCurrencyRatesResultDataRemote
-        }
-
-        val savedCurrencyRatesResultDataLocal: ResultData<List<Long>> =
-            currencyConverterLocalDataSource.saveCurrencyRates(currencyRatesModel = currencyRatesModel)
-
-        if (savedCurrencyRatesResultDataLocal is Error) {
-            return@withContext savedCurrencyRatesResultDataLocal
-        }
-
-        if (savedCurrencyRatesResultDataRemote is Success && savedCurrencyRatesResultDataLocal is Success) {
-            return@withContext Success(savedCurrencyRatesResultDataRemote.data)
-        }
-
-        return@withContext Error(
-            failure = CurrencyConverterFailure.InsertCurrencyRateRepositoryError()
-        )
 
     }
 
     override suspend fun deleteCurrencyRates(
         params: Params,
-        deleteRemotely: Boolean?
+//        deleteRemotely: Boolean?
+        deleteRemotely: Boolean
     ): ResultData<Int> = withContext(ioDispatcher) {
 
-        deleteRemotely?.let { deleteRemotely ->
-            if (deleteRemotely) {
-                return@withContext currencyConverterRemoteDataSource.deleteCurrencyRates(params = params)
-            } else {
-                return@withContext currencyConverterLocalDataSource.deleteCurrencyRates(params = params)
-            }
+//        deleteRemotely?.let { deleteRemotely ->
+//            if (deleteRemotely) {
+//                return@withContext currencyConverterRemoteDataSource.deleteCurrencyRates(params = params)
+//            } else {
+//                return@withContext currencyConverterLocalDataSource.deleteCurrencyRates(params = params)
+//            }
+//        }
+//
+//        val deletedCurrencyRatesResultDataRemote: ResultData<Int> =
+//            currencyConverterRemoteDataSource.deleteCurrencyRates(params = params)
+//
+//        if (deletedCurrencyRatesResultDataRemote is Error) {
+//            return@withContext deletedCurrencyRatesResultDataRemote
+//        }
+//
+//        val deletedCurrencyRatesResultDataLocal: ResultData<Int> =
+//            currencyConverterLocalDataSource.deleteCurrencyRates(params = params)
+//
+//        if (deletedCurrencyRatesResultDataLocal is Error) {
+//            return@withContext deletedCurrencyRatesResultDataLocal
+//        }
+//
+//        if (deletedCurrencyRatesResultDataRemote is Success && deletedCurrencyRatesResultDataLocal is Success) {
+//            return@withContext Success(deletedCurrencyRatesResultDataRemote.data)
+//        }
+//
+//        return@withContext Error(
+//            failure = CurrencyConverterFailure.DeleteCurrencyRateRepositoryError()
+//        )
+
+        if (deleteRemotely) {
+            return@withContext currencyConverterRemoteDataSource.deleteCurrencyRates(params = params)
+        } else {
+            return@withContext currencyConverterLocalDataSource.deleteCurrencyRates(params = params)
         }
-
-        val deletedCurrencyRatesResultDataRemote: ResultData<Int> =
-            currencyConverterRemoteDataSource.deleteCurrencyRates(params = params)
-
-        if (deletedCurrencyRatesResultDataRemote is Error) {
-            return@withContext deletedCurrencyRatesResultDataRemote
-        }
-
-        val deletedCurrencyRatesResultDataLocal: ResultData<Int> =
-            currencyConverterLocalDataSource.deleteCurrencyRates(params = params)
-
-        if (deletedCurrencyRatesResultDataLocal is Error) {
-            return@withContext deletedCurrencyRatesResultDataLocal
-        }
-
-        if (deletedCurrencyRatesResultDataRemote is Success && deletedCurrencyRatesResultDataLocal is Success) {
-            return@withContext Success(deletedCurrencyRatesResultDataRemote.data)
-        }
-
-        return@withContext Error(
-            failure = CurrencyConverterFailure.DeleteCurrencyRateRepositoryError()
-        )
     }
 
     private suspend fun fetchCurrencyRatesFromRemoteOrLocal(
         params: Params, forceUpdate: Boolean
     ): ResultData<List<CurrencyConverterModel>> {
+        var isRemoteException = false
+
         // Remote first
         if (forceUpdate) {
             when (val currencyRatesRemote = currencyConverterRemoteDataSource.getCurrencyRates(params = params)) {
 //             is Error -> return remoteCurrencyRates // Timber.w("Remote data source fetch failed")
+                is Error -> {
+                    if (currencyRatesRemote.failure is CurrencyConverterFailure.CurrencyRateRemoteError)
+                        isRemoteException = true
+                }
                 is Success -> {
                     refreshLocalDataSource(params = params, currencyRates = currencyRatesRemote.data)
 
@@ -206,7 +226,16 @@ class CurrencyConverterRepository(
 
         // Don't read from local if it's forced
         if (forceUpdate) {
+            if (isRemoteException)
+                return Error(
+                    CurrencyConverterFailure.GetCurrencyRateRepositoryError(
+                        message = R.string.exception_occurred_remote
+                    )
+                )
+
             return Error(
+                // TODO: Change GetCurrencyRateRemoteError to GetCurrencyRateRepositoryError and update
+                //  test cases too.
                 CurrencyConverterFailure.GetCurrencyRateRemoteError(
                     message = R.string.error_cant_force_refresh_currency_rates_remote_data_source_unavailable
                 )
@@ -217,6 +246,13 @@ class CurrencyConverterRepository(
         val currencyRatesLocal = currencyConverterLocalDataSource.getCurrencyRates(params = params)
 
         if (currencyRatesLocal is Success) return currencyRatesLocal
+
+        if ((currencyRatesLocal as Error).failure is CurrencyConverterFailure.CurrencyRateLocalError)
+            return Error(
+                CurrencyConverterFailure.GetCurrencyRateRepositoryError(
+                    R.string.exception_occurred_local
+                )
+            )
 
 //        return Error((currencyRatesLocal as Error).failure)
         return Error(
