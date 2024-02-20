@@ -24,6 +24,7 @@
     <string name="exception_occurred_remote">Remote exception occurred.</string>
     <string name="message_no_internet_loading_cached_currency_rates">No internet connectivity. Loading saved currency rates…</string>
     <string name="message_no_internet_connectivity">No internet connectivity.</string>
+    <string name="message_refresh_in_30_minutes">Please refresh in 30 minutes after a successful refresh.</string>
 
     <string name="error_memory_currency_rate_list_not_available">Currency rate list not available memory error.</string>
     <string name="error_local_currency_rate_list_not_available">Currency rate list not available local error.</string>

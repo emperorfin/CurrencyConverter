@@ -24,7 +24,6 @@ import emperorfin.android.currencyconverter.ui.utils.Helpers
 import emperorfin.android.currencyconverter.ui.utils.InternetConnectivityUtil.hasInternetConnection
 import emperorfin.android.currencyconverter.ui.utils.WhileUiSubscribed
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.async
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.combine
@@ -32,7 +31,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import kotlin.concurrent.thread
+import java.util.concurrent.TimeUnit
 import kotlin.math.roundToInt
 import kotlin.properties.Delegates
 
@@ -50,6 +49,9 @@ class CurrencyConversionViewModel(
 
     companion object {
 
+        private const val REFRESH_TIME_MINUTES_30: Int = 30
+
+        private const val REFRESH_TIME_MILLIS_MINUS_1: Long = -1
         private const val DELAY_TIME_MILLIS_3000: Long = 3000
 
         private const val CURRENCY_SYMBOL_USD: String = "USD"
@@ -81,6 +83,7 @@ class CurrencyConversionViewModel(
     private val currencyConverterUiModelMapper = CurrencyConverterUiModelMapper(context = applicationContext)
 
     private var initCurrencyRates = true
+    private var isRefresh = false
 
     private var currencyRatesWithFlagsDefault = listOf<CurrencyConverterUiModel>()
 
@@ -266,6 +269,8 @@ class CurrencyConversionViewModel(
     private val _messageSnackBar: MutableStateFlow<Int?> = MutableStateFlow(null)
     private val messageSnackBar: StateFlow<Int?> = _messageSnackBar
 
+    private var refreshTimeMillisStart: Long = REFRESH_TIME_MILLIS_MINUS_1
+
     init {
 
         // Option 1
@@ -397,6 +402,27 @@ class CurrencyConversionViewModel(
     ) /*= viewModelScope.launch(context = coroutineDispatcherDefault)*/ {
         if (isFreeOpenExchangeRatesAccount && baseCurrencySymbol != CURRENCY_SYMBOL_USD) return
 
+        if (refreshTimeMillisStart > REFRESH_TIME_MILLIS_MINUS_1) {
+            val refreshTimeMillisCurrent: Long = System.currentTimeMillis()
+            val refreshTimeElapsedMillis: Long = refreshTimeMillisCurrent - refreshTimeMillisStart
+
+            val refreshTimeElapsedMinutes: Int = TimeUnit.MILLISECONDS.toMinutes(refreshTimeElapsedMillis).toInt()
+
+            println("refreshTimeElapsedMinutes: $refreshTimeElapsedMinutes")
+
+            if (refreshTimeElapsedMinutes < REFRESH_TIME_MINUTES_30) {
+                Toast.makeText(
+                    applicationContext,
+                    R.string.message_refresh_in_30_minutes,
+                    Toast.LENGTH_LONG
+                ).show()
+
+                return
+            }
+        }
+
+        isRefresh = true
+
         val params = CurrencyConverterParams(currencySymbolBase = baseCurrencySymbol)
 
         println("refreshCurrencyRates() 1")
@@ -450,6 +476,12 @@ class CurrencyConversionViewModel(
                 }
 
                 val mapOfCurrencySymbolsToFlagSorted = mapOfCurrencySymbolsToFlag.toSortedMap()
+
+                println("uistate -> isRefresh1: $isRefresh")
+                if (isRefresh) refreshTimeMillisStart = System.currentTimeMillis()
+//                timeMillisStart = System.currentTimeMillis()
+                isRefresh = false
+                println("uistate -> isRefresh2: $isRefresh")
 
                 CurrencyConversionUiState(
                     items = currencyRatesWithFlagsSorted,
