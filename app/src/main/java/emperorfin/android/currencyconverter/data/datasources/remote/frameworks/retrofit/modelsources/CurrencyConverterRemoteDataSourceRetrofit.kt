@@ -31,7 +31,6 @@ import retrofit2.Response
 
 
 data class CurrencyConverterRemoteDataSourceRetrofit internal constructor(
-//    private val context: Context,
     private val currencyRatesDao: CurrencyRatesDao = OpenExchangeRatesService.INSTANCE,
     private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
     private val mainDispatcher: CoroutineDispatcher = Dispatchers.Main,
@@ -50,19 +49,12 @@ data class CurrencyConverterRemoteDataSourceRetrofit internal constructor(
     ): ResultData<List<CurrencyConverterModel>> = withContext(ioDispatcher) {
         when(params){
             is None -> {
-//                throw IllegalArgumentException(context.getString(R.string.error_inappropriate_argument_passed))
                 throw IllegalArgumentException(ERROR_MESSAGE_INAPPROPRIATE_ARGUMENT_PASSED)
             }
             is CurrencyConverterParams -> {
 
                 return@withContext try {
 
-//                    val response = OpenExchangeRatesService
-//                        .INSTANCE
-//                        .getCurrencyRates(
-//                            currencySymbolBase = params.currencySymbolBase!!,
-//                            arg1 = OpenExchangeRatesService.APP_ID
-//                        )
                     val response = currencyRatesDao.getCurrencyRates(
                             currencySymbolBase = params.currencySymbolBase!!,
                             appId = OpenExchangeRatesService.APP_ID
@@ -90,7 +82,6 @@ data class CurrencyConverterRemoteDataSourceRetrofit internal constructor(
                     return@withContext Error(failure = CurrencyConverterFailure.CurrencyRateRemoteError(cause = e))
                 }
             }
-//            else -> throw NotImplementedError(context.getString(R.string.error_not_yet_implemented))
             else -> throw NotImplementedError(ERROR_MESSAGE_NOT_YET_IMPLEMENTED)
         }
     }

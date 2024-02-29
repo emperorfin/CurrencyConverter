@@ -44,16 +44,12 @@ internal data class FakeCurrencyRatesDao(
 
     override suspend fun countAllCurrencyRates(): Int {
 
-        println("noOfCurrencyRates: $noOfCurrencyRates")
-
         if (isCountException) throw Exception()
 
         return noOfCurrencyRates
     }
 
     override suspend fun countCurrencyRates(currencySymbolBase: String): Int  {
-
-        println("noOfCurrencyRates: $noOfCurrencyRates")
 
         if (isCountException) throw Exception()
 

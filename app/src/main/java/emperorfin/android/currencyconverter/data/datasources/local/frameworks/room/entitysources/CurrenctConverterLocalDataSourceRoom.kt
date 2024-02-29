@@ -32,8 +32,6 @@ import kotlinx.coroutines.withContext
 
 
 data class CurrencyConverterLocalDataSourceRoom internal constructor(
-//    private val context: Context,
-//    private val currencyRateDao: CurrencyRateDao,
     private val currencyRateDao: CurrencyRatesDao,
     private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
     private val currencyConverterEntityMapper: CurrencyConverterEntityMapper = CurrencyConverterEntityMapper(),
@@ -64,10 +62,8 @@ data class CurrencyConverterLocalDataSourceRoom internal constructor(
                 }
             }
             is CurrencyConverterParams -> {
-//                throw IllegalArgumentException(context.getString(R.string.error_inappropriate_argument_passed))
                 throw IllegalArgumentException(ERROR_MESSAGE_INAPPROPRIATE_ARGUMENT_PASSED)
             }
-//            else -> throw NotImplementedError(context.getString(R.string.error_not_yet_implemented))
             else -> throw NotImplementedError(ERROR_MESSAGE_NOT_YET_IMPLEMENTED)
         }
 
@@ -77,15 +73,12 @@ data class CurrencyConverterLocalDataSourceRoom internal constructor(
     override suspend fun countCurrencyRates(params: Params): ResultData<Int> = withContext(ioDispatcher) {
         when(params){
             is None -> {
-//                throw IllegalArgumentException(context.getString(R.string.error_inappropriate_argument_passed))
                 throw IllegalArgumentException(ERROR_MESSAGE_INAPPROPRIATE_ARGUMENT_PASSED)
             }
             is CurrencyConverterParams -> {
                 return@withContext try {
 
                     val numOfCurrencyRates: Int = currencyRateDao.countCurrencyRates(params.currencySymbolBase!!)
-
-                    println("numOfCurrencyRates: $numOfCurrencyRates")
 
                     if (numOfCurrencyRates > NUM_OF_CURRENCY_RATES_0) {
                         return@withContext Success(data = numOfCurrencyRates)
@@ -99,7 +92,6 @@ data class CurrencyConverterLocalDataSourceRoom internal constructor(
                     return@withContext Error(failure = CurrencyRateLocalError(cause = e))
                 }
             }
-//            else -> throw NotImplementedError(context.getString(R.string.error_not_yet_implemented))
             else -> throw NotImplementedError(ERROR_MESSAGE_NOT_YET_IMPLEMENTED)
         }
     }
@@ -110,7 +102,6 @@ data class CurrencyConverterLocalDataSourceRoom internal constructor(
 
         when(params){
             is None -> {
-//                throw IllegalArgumentException(context.getString(R.string.error_inappropriate_argument_passed))
                 throw IllegalArgumentException(ERROR_MESSAGE_INAPPROPRIATE_ARGUMENT_PASSED)
             }
             is CurrencyConverterParams -> {
@@ -133,7 +124,6 @@ data class CurrencyConverterLocalDataSourceRoom internal constructor(
                     return@withContext Error(failure = CurrencyRateLocalError(cause = e))
                 }
             }
-//            else -> throw NotImplementedError(context.getString(R.string.error_not_yet_implemented))
             else -> throw NotImplementedError(ERROR_MESSAGE_NOT_YET_IMPLEMENTED)
         }
     }
@@ -165,7 +155,6 @@ data class CurrencyConverterLocalDataSourceRoom internal constructor(
     override suspend fun deleteCurrencyRates(params: Params): ResultData<Int> = withContext(ioDispatcher) {
         when(params){
             is None -> {
-//                throw IllegalArgumentException(context.getString(R.string.error_inappropriate_argument_passed))
                 throw IllegalArgumentException(ERROR_MESSAGE_INAPPROPRIATE_ARGUMENT_PASSED)
             }
             is CurrencyConverterParams -> {
@@ -202,7 +191,6 @@ data class CurrencyConverterLocalDataSourceRoom internal constructor(
                     return@withContext Error(failure = DeleteCurrencyRateLocalError(cause = e))
                 }
             }
-//            else -> throw NotImplementedError(context.getString(R.string.error_not_yet_implemented))
             else -> throw NotImplementedError(ERROR_MESSAGE_NOT_YET_IMPLEMENTED)
         }
     }

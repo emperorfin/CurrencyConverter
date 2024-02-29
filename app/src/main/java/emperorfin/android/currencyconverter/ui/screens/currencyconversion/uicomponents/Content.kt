@@ -123,23 +123,6 @@ fun Content(
                     onClick = {
 
                         if(baseAmount.isNotEmpty()) {
-                            // remv uncomment
-//                        mainViewModel.convert(
-//                            baseCurrencySymbol,
-//                            targetCurrencySymbol,
-//                            baseAmount.toDouble()
-//                        )
-//
-//                        Toast.makeText(context, "Calculating..", Toast.LENGTH_SHORT).show()
-//
-//                        //if conversion gives an error, toast the error message
-//                        if(conversionRate.error != null) {
-//                            Toast.makeText(
-//                                context,
-//                                "${conversionRate.error?.info}",
-//                                Toast.LENGTH_LONG
-//                            ).show()
-//                        }
 
                             if (!baseAmount.isDigitsOnly()) {
                                 Toast.makeText(context, "Input must be digits only.", Toast.LENGTH_SHORT).show()
@@ -176,22 +159,12 @@ fun Content(
                     )
                 }
 
-//        Spacer(modifier = Modifier.height(16.dp))
-//                Spacer(modifier = Modifier.height(8.dp))
-
                 Column(
                     modifier = modifier
                         .fillMaxSize()
 //                    .padding(horizontal = dimensionResource(id = R.dimen.horizontal_margin))
                 ) {
-//            Text(
-//                text = stringResource(currentFilteringLabel),
-//                modifier = Modifier.padding(
-//                    horizontal = dimensionResource(id = R.dimen.list_item_padding),
-//                    vertical = dimensionResource(id = R.dimen.vertical_margin)
-//                ),
-//                style = MaterialTheme.typography.h6
-//            )
+
                     LazyVerticalGrid(columns = GridCells.Adaptive(minSize = 328.dp),
                         contentPadding = PaddingValues(
                             start = 12.dp,

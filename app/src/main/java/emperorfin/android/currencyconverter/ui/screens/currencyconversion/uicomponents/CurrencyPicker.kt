@@ -127,23 +127,6 @@ fun CurrencyPicker(
                 .height(250.dp)
         ) {
             mapOfCurrencySymbolsToFlag.forEach { item ->
-//                DropdownMenuItem(
-//                    text = {
-//                        Icon(
-//                            modifier = Modifier.size(20.dp),
-//                            bitmap = Helpers.getFlagImageBitMap(item.value),
-//                            contentDescription ="Flag",
-//                            tint = Color.Unspecified
-//                        )
-//                        Spacer(modifier = Modifier.width(24.dp))
-//                        Text(text = item.key, fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
-//                    },
-//                    onClick = {
-//                        selectedSymbol = item.key
-//                        onSymbolSelected(item.key)
-//                        isExpanded = false
-//                    }
-//                )
 
                 DropdownMenuItem(
                     leadingIcon = {

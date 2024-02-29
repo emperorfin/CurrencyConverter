@@ -30,11 +30,8 @@ import emperorfin.android.currencyconverter.ui.theme.CurrencyConverterTheme
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RateTextField(
-//    trailingText: String,
     modifier: Modifier = Modifier,
-//    readOnly: Boolean,
     value: String,
-//    enabled: Boolean,
     onBaseAmountChanged: (newBaseAmount: String) -> Unit
 ) {
     //rememberable field value even when orientation and configuration changes
@@ -49,17 +46,8 @@ fun RateTextField(
 //        modifier = modifier.fillMaxWidth(),
         modifier = modifier.wrapContentWidth(),
         singleLine = true,
-//        trailingIcon = {
-//            Text(
-//                text = trailingText,
-//                color = MaterialTheme.colorScheme.secondary,
-//                fontWeight = FontWeight.Bold
-//            )
-//        },
         shape = RoundedCornerShape(6.dp),
         colors = TextFieldDefaults.textFieldColors(
-//            textColor = Color.DarkGray,
-//            backgroundColor = MaterialTheme.colorScheme.secondary,
             disabledTextColor = Color.DarkGray,
             focusedIndicatorColor = Color.Transparent,
             unfocusedIndicatorColor = Color.Transparent,

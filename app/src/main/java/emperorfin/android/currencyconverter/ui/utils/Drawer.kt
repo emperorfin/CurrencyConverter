@@ -54,19 +54,6 @@ fun AppModalDrawer(
     coroutineScope: CoroutineScope = rememberCoroutineScope(),
     content: @Composable () -> Unit
 ) {
-//    ModalNavigationDrawer(
-//        drawerState = drawerState,
-//        drawerContent = {
-//            AppDrawer(
-//                currentRoute = currentRoute,
-//                navigateToCurrencyConversion = { navigationActions.navigateToCurrencyConversion() },
-//                navigateToAbout = { navigationActions.navigateToAbout() },
-//                closeDrawer = { coroutineScope.launch { drawerState.close() } }
-//            )
-//        }
-//    ) {
-//        content()
-//    }
     ModalNavigationDrawer(
         drawerState = drawerState,
         drawerContent = {

@@ -14,13 +14,6 @@ import emperorfin.android.currencyconverter.domain.exceptions.Failure
  * A generic class that holds a loading signal or the result of an async operation.
  * @param R
  */
-//sealed class ResultData<out T> {
-//    object Loading : ResultData<Nothing>()
-//
-//    data class Error(val errorMessage: Int) : ResultData<Nothing>()
-//
-//    data class Success<out T>(val data: T) : ResultData<T>()
-//}
 sealed class ResultData<out R>{
     /**
      * @param T

@@ -19,10 +19,8 @@ interface ICurrencyConverterRepository {
 
     suspend fun getCurrencyRates(params: Params, forceUpdate: Boolean = false): ResultData<List<CurrencyConverterModel>>
 
-//    suspend fun saveCurrencyRates(currencyRatesModel: List<CurrencyConverterModel>, saveRemotely: Boolean? = null): ResultData<List<Long>>
     suspend fun saveCurrencyRates(currencyRatesModel: List<CurrencyConverterModel>, saveRemotely: Boolean = false): ResultData<List<Long>>
 
-//    suspend fun deleteCurrencyRates(params: Params, deleteRemotely: Boolean? = null): ResultData<Int>
     suspend fun deleteCurrencyRates(params: Params, deleteRemotely: Boolean = false): ResultData<Int>
 
 }
