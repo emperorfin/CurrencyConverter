@@ -23,6 +23,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import emperorfin.android.currencyconverter.R
 import emperorfin.android.currencyconverter.ui.screens.currencyconversion.CurrencyConversionScreen
+import emperorfin.android.currencyconverter.ui.screens.about.AboutScreen
 import emperorfin.android.currencyconverter.ui.theme.CurrencyConverterTheme
 import emperorfin.android.currencyconverter.ui.utils.AppModalDrawer
 import kotlinx.coroutines.CoroutineScope
@@ -73,10 +74,9 @@ fun NavGraph(
         composable(Destinations.ROUTE_ABOUT) {
             AppModalDrawer(drawerState, currentRoute, navActions) {
 
-                CurrencyConversionScreen(
+                AboutScreen(
                     context = context,
-                    openDrawer = { coroutineScope.launch { drawerState.open() } },
-                    mapOfCurrencySymbolsToFlag = mapOfCurrencySymbolsToFlag
+                    openDrawer = { coroutineScope.launch { drawerState.open() } }
                 )
             }
         }

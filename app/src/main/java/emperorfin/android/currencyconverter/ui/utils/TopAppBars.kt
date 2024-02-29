@@ -57,7 +57,7 @@ fun AboutTopAppBar(
     openDrawer: () -> Unit
 ) {
     TopAppBar(
-        title = { Text(text = stringResource(id = R.string.app_name)) },
+        title = { Text(text = stringResource(id = R.string.app_about)) },
         navigationIcon = {
             IconButton(onClick = openDrawer) {
                 Icon(Icons.Filled.Menu, stringResource(id = R.string.open_drawer))
