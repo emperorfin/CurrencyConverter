@@ -1,0 +1,1 @@
+Currency Converter is a native Android app project that uses [Open Exchange Rates webservice REST API](https://openexchangerates.org/api) to convert from one currency to another.

@@ -1,7 +1,5 @@
 package emperorfin.android.currencyconverter.data.datasources.remote.frameworks.retrofit.modelsources
 
-import android.content.Context
-import emperorfin.android.currencyconverter.R
 import emperorfin.android.currencyconverter.data.constants.StringConstants.ERROR_MESSAGE_INAPPROPRIATE_ARGUMENT_PASSED
 import emperorfin.android.currencyconverter.data.constants.StringConstants.ERROR_MESSAGE_NOT_YET_IMPLEMENTED
 import emperorfin.android.currencyconverter.data.datasources.remote.frameworks.retrofit.models.currencyconverter.CurrencyConverterDataTransferObject

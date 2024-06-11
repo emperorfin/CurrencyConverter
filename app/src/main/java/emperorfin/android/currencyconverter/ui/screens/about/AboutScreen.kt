@@ -12,8 +12,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.tooling.preview.Preview
 import emperorfin.android.currencyconverter.R
 import emperorfin.android.currencyconverter.ui.utils.AboutTopAppBar
 
@@ -64,4 +66,13 @@ fun Content(modifier: Modifier = Modifier) {
         Text(text = "This is just a simple About screen.")
     }
 
+}
+
+@Preview()
+@Composable
+private fun AboutScreenPreview() {
+    AboutScreen(
+        context = LocalContext.current,
+        openDrawer = {}
+    )
 }

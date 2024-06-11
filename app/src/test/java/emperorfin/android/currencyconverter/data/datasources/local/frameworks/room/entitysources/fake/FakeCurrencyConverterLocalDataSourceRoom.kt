@@ -1,6 +1,5 @@
 package emperorfin.android.currencyconverter.data.datasources.local.frameworks.room.entitysources.fake
 
-import emperorfin.android.currencyconverter.data.constants.StringConstants
 import emperorfin.android.currencyconverter.data.constants.StringConstants.ERROR_MESSAGE_INAPPROPRIATE_ARGUMENT_PASSED
 import emperorfin.android.currencyconverter.data.constants.StringConstants.ERROR_MESSAGE_NOT_YET_IMPLEMENTED
 import emperorfin.android.currencyconverter.domain.datalayer.datasources.AFakeCurrencyConverterDataSource
